@@ -10,6 +10,7 @@ export enum UserRole {
   FINANCIAL_ANALYST = 'Financial Analyst',
 }
 
+/** Represents the current operational state of a vehicle in the fleet */
 export enum VehicleStatus {
   AVAILABLE = 'Available',
   ON_TRIP = 'On Trip',
@@ -17,6 +18,7 @@ export enum VehicleStatus {
   RETIRED = 'Retired',
 }
 
+/** Represents the availability and current assignment of a driver */
 export enum DriverStatus {
   AVAILABLE = 'Available',
   ON_TRIP = 'On Trip',
@@ -24,6 +26,7 @@ export enum DriverStatus {
   SUSPENDED = 'Suspended',
 }
 
+/** Represents the lifecycle phase of a dispatched trip */
 export enum TripStatus {
   DRAFT = 'Draft',
   DISPATCHED = 'Dispatched',
