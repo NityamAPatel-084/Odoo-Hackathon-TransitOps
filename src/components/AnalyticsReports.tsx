@@ -1,6 +1,8 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Vehicle, Trip, FuelLog, Expense, MaintenanceLog, TripStatus } from '../types';
-import { LineChart, BarChart3, Download, TrendingUp, DollarSign, Fuel, Wrench, Shield, Check } from 'lucide-react';
+import { BarChart3, Download, TrendingUp, DollarSign, Fuel, Check } from 'lucide-react';
+
+const CSV_HEADER = 'Registration Number,Vehicle Name,Completed Trips,Total Miles Run,Estimated Revenue ($),Fuel Costs ($),Maintenance Costs ($),Other Expenses ($),Depreciation ($),Total Costs ($),ROI (%)\r\n';
 
 interface AnalyticsReportsProps {
   vehicles: Vehicle[];
@@ -82,7 +84,7 @@ export default function AnalyticsReports({
   const handleExportCSV = () => {
     // CSV Header
     let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'Registration Number,Vehicle Name,Completed Trips,Total Miles Run,Estimated Revenue ($),Fuel Costs ($),Maintenance Costs ($),Other Expenses ($),Depreciation ($),Total Costs ($),ROI (%)\r\n';
+    csvContent += CSV_HEADER;
 
     // CSV Rows
     fleetPerformance.forEach((row) => {
