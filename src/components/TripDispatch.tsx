@@ -1,3 +1,7 @@
+/**
+ * @module TripDispatch
+ * TransitOps Component Module
+ */
 import React, { useState } from 'react';
 import { Trip, TripStatus, Vehicle, VehicleStatus, Driver, DriverStatus, UserRole } from '../types';
 import { Navigation, Plus, MapPin, Truck, User, Scale, ArrowRight, AlertTriangle, ShieldCheck, CheckCircle, HelpCircle, X } from 'lucide-react';
