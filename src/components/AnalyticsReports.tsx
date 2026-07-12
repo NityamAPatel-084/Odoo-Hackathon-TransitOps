@@ -12,6 +12,7 @@ interface AnalyticsReportsProps {
   maintenanceLogs: MaintenanceLog[];
 }
 
+const calcROI = (r: number, c: number) => c > 0 ? ((r - c) / c) * 100 : 0;
 export default function AnalyticsReports({
   vehicles,
   trips,
