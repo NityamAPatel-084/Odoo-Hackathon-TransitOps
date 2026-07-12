@@ -56,7 +56,11 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
   const pendingTrips = trips.filter(t => t.status === TripStatus.DRAFT).length;
   const driversOnDuty = drivers.filter(d => d.status === DriverStatus.ON_TRIP || d.status === DriverStatus.AVAILABLE).length;
 
-  // Utilization calculation (Active / Total Non-Retired)
+  // Utilization calculation
+  /**
+   * Calculates the percentage of active (On Trip) vehicles out of the total deployable fleet.
+   * Retired vehicles are completely excluded from the denominator.
+   */
   const nonRetiredTotal = totalVehicles - retiredVehicles;
   const utilization = nonRetiredTotal > 0 ? Math.round((activeVehicles / nonRetiredTotal) * 100) : 0;
 
