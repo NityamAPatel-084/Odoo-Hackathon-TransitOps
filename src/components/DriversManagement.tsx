@@ -119,6 +119,7 @@ export default function DriversManagement({
     setEditingId(null);
   };
 
+  /** Filters the drivers */
   const filteredDrivers = drivers.filter((d) => {
     if (selectedStatus && d.status !== selectedStatus) return false;
     if (searchQuery) {
