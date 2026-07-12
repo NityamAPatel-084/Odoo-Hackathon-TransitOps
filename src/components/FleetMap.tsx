@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, Info, Navigation, ShieldAlert, Compass, Activity } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Compass, ShieldAlert, Activity, Navigation, MapPin } from 'lucide-react';
 import { Vehicle, VehicleStatus, Trip, Driver } from '../types';
 
 interface FleetMapProps {
@@ -8,18 +8,16 @@ interface FleetMapProps {
   drivers: Driver[];
 }
 
-// Coordinate mappings for major cities/hubs
-const HUBS: Record<string, { name: string; x: number; y: number }> = {
-  'Chicago': { name: 'Main Hub - Chicago', x: 250, y: 150 },
-  'New York': { name: 'East Terminal - New York', x: 420, y: 110 },
-  'Houston': { name: 'South Depot - Houston', x: 230, y: 340 },
-  'Los Angeles': { name: 'West Gate - Los Angeles', x: 70, y: 260 },
-  'Seattle': { name: 'Northwest - Seattle', x: 60, y: 70 },
-  'Miami': { name: 'Southeast Terminal - Miami', x: 390, y: 350 },
-  'Denver': { name: 'Mountain Hub - Denver', x: 170, y: 190 },
+const REAL_HUBS: Record<string, { name: string; lat: number; lng: number }> = {
+  'Chicago': { name: 'Main Hub - Chicago', lat: 41.8781, lng: -87.6298 },
+  'New York': { name: 'East Terminal - New York', lat: 40.7128, lng: -74.0060 },
+  'Houston': { name: 'South Depot - Houston', lat: 29.7604, lng: -95.3698 },
+  'Los Angeles': { name: 'West Gate - Los Angeles', lat: 34.0522, lng: -118.2437 },
+  'Seattle': { name: 'Northwest - Seattle', lat: 47.6062, lng: -122.3321 },
+  'Miami': { name: 'Southeast Terminal - Miami', lat: 25.7617, lng: -80.1918 },
+  'Denver': { name: 'Mountain Hub - Denver', lat: 39.7392, lng: -104.9903 },
 };
 
-// Default map links between hubs
 const ROUTES = [
   { from: 'Seattle', to: 'Los Angeles' },
   { from: 'Seattle', to: 'Denver' },
@@ -35,7 +33,13 @@ const ROUTES = [
 export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) => {
   const [selectedReg, setSelectedReg] = useState<string>('');
   const [simulationTime, setSimulationTime] = useState<number>(0);
-  const [telemetryLog, setTelemetryLog] = useState<string[]>(['GPS tracking interface active.']);
+  const [telemetryLog, setTelemetryLog] = useState<string[]>(['Real-world GIS interface initialized.']);
+  const [leafletLoaded, setLeafletLoaded] = useState<boolean>(false);
+
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<Record<string, any>>({});
+  const routeLinesRef = useRef<any[]>([]);
 
   // Increment simulation time to animate moving vehicles
   useEffect(() => {
@@ -45,18 +49,40 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
     return () => clearInterval(timer);
   }, []);
 
-  // Filter for active trips
-  const activeTrips = trips.filter((t) => t.status === 'Dispatched');
+  // Load Leaflet CSS and JS Dynamically from UNPKG CDN
+  useEffect(() => {
+    if ((window as any).L) {
+      setLeafletLoaded(true);
+      return;
+    }
 
-  // Select first active vehicle on load if none selected
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.id = 'leaflet-css';
+    document.head.appendChild(link);
+
+    // Load JS
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.async = true;
+    script.onload = () => {
+      setLeafletLoaded(true);
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      const existingLink = document.getElementById('leaflet-css');
+      if (existingLink) existingLink.remove();
+    };
+  }, []);
+
+  // Set default selection
   useEffect(() => {
     if (!selectedReg && vehicles.length > 0) {
       const firstActive = vehicles.find((v) => v.status === VehicleStatus.ON_TRIP);
-      if (firstActive) {
-        setSelectedReg(firstActive.registrationNumber);
-      } else {
-        setSelectedReg(vehicles[0].registrationNumber);
-      }
+      setSelectedReg(firstActive ? firstActive.registrationNumber : vehicles[0].registrationNumber);
     }
   }, [vehicles, selectedReg]);
 
@@ -64,66 +90,176 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
   const activeTrip = selectedVehicle ? trips.find((t) => t.vehicleReg === selectedReg && t.status === 'Dispatched') : null;
   const assignedDriver = activeTrip ? drivers.find((d) => d.id === activeTrip.driverId) : null;
 
-  // Resolve position coordinates for a vehicle
+  // Coordinate resolution
   const getVehicleCoords = (veh: Vehicle) => {
     const trip = trips.find((t) => t.vehicleReg === veh.registrationNumber && t.status === 'Dispatched');
     if (!trip) {
-      // Parked vehicle: distribute them across hubs based on registration number hash
-      const hubKeys = Object.keys(HUBS);
+      const hubKeys = Object.keys(REAL_HUBS);
       let hash = 0;
       for (let i = 0; i < veh.registrationNumber.length; i++) {
         hash = veh.registrationNumber.charCodeAt(i) + ((hash << 5) - hash);
       }
       const hubIndex = Math.abs(hash) % hubKeys.length;
       const assignedHubName = hubKeys[hubIndex];
-      const hub = HUBS[assignedHubName];
-      return { x: hub.x, y: hub.y, isParked: true, hubName: assignedHubName };
+      const hub = REAL_HUBS[assignedHubName];
+      return { lat: hub.lat, lng: hub.lng, isParked: true, hubName: assignedHubName };
     }
 
-    // Resolve source and destination coordinates
-    const sourceHub = HUBS[trip.source] || HUBS['Chicago'];
-    const destHub = HUBS[trip.destination] || HUBS['New York'];
+    const sourceHub = REAL_HUBS[trip.source] || REAL_HUBS['Chicago'];
+    const destHub = REAL_HUBS[trip.destination] || REAL_HUBS['New York'];
 
-    // Linear interpolation based on simulation time
-    const t = (simulationTime / 100); // 0 to 1
-    const x = sourceHub.x + (destHub.x - sourceHub.x) * t;
-    const y = sourceHub.y + (destHub.y - sourceHub.y) * t;
+    const t = simulationTime / 100;
+    const lat = sourceHub.lat + (destHub.lat - sourceHub.lat) * t;
+    const lng = sourceHub.lng + (destHub.lng - sourceHub.lng) * t;
 
-    return { x, y, isParked: false, source: trip.source, destination: trip.destination, hubName: trip.source };
+    return { lat, lng, isParked: false, source: trip.source, destination: trip.destination, hubName: trip.source };
   };
 
   const selectedCoords = selectedVehicle 
     ? getVehicleCoords(selectedVehicle) 
-    : { x: 250, y: 150, isParked: true, hubName: 'Chicago' };
+    : { lat: 41.8781, lng: -87.6298, isParked: true, hubName: 'Chicago' };
 
+  // Initialize and update Leaflet Map instance
+  useEffect(() => {
+    if (!leafletLoaded || !mapRef.current) return;
+    const L = (window as any).L;
+
+    // Initialize Map Instance if not exists
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = L.map(mapRef.current, {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView([39.8283, -98.5795], 4); // Center on USA
+
+      // Add CartoDB Dark Matter tile layer for premium dark aesthetics
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+      }).addTo(mapInstanceRef.current);
+
+      // Add zoom control at bottom right
+      L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
+
+      // Plot Hub Depots
+      Object.entries(REAL_HUBS).forEach(([key, hub]) => {
+        const hubIcon = L.divIcon({
+          className: 'custom-hub-icon',
+          html: `<div class="relative flex items-center justify-center">
+                   <div class="absolute w-4 h-4 rounded-full bg-[#d97707]/20 border border-[#d97707]/60 animate-ping"></div>
+                   <div class="w-2.5 h-2.5 rounded-full bg-[#d97707] border border-[#0D0F14]"></div>
+                   <span class="absolute top-4 text-[9px] font-bold text-[#dbc2b0]/80 whitespace-nowrap bg-[#161A22] border border-[#2D3748] px-1 rounded shadow-sm">${key} Depot</span>
+                 </div>`,
+          iconSize: [20, 20],
+        });
+        L.marker([hub.lat, hub.lng], { icon: hubIcon }).addTo(mapInstanceRef.current);
+      });
+
+      // Plot Base Routes
+      ROUTES.forEach((route) => {
+        const start = REAL_HUBS[route.from];
+        const end = REAL_HUBS[route.to];
+        if (start && end) {
+          L.polyline([[start.lat, start.lng], [end.lat, end.lng]], {
+            color: '#2D3748',
+            weight: 1.5,
+            dashArray: '4, 6',
+            opacity: 0.6
+          }).addTo(mapInstanceRef.current);
+        }
+      });
+    }
+
+    const map = mapInstanceRef.current;
+
+    // Draw active routes line
+    routeLinesRef.current.forEach((line) => line.remove());
+    routeLinesRef.current = [];
+
+    // Clear old vehicle markers
+    Object.values(markersRef.current).forEach((marker) => marker.remove());
+    markersRef.current = {};
+
+    // Draw lines and place markers for ALL vehicles
+    vehicles.forEach((veh) => {
+      const coords = getVehicleCoords(veh);
+      const isSelected = veh.registrationNumber === selectedReg;
+      const color = veh.status === VehicleStatus.ON_TRIP ? '#10b981' : '#3b82f6';
+      
+      // If it is on trip and selected, draw its path line
+      if (veh.status === VehicleStatus.ON_TRIP && isSelected && activeTrip) {
+        const start = REAL_HUBS[activeTrip.source];
+        const end = REAL_HUBS[activeTrip.destination];
+        if (start && end) {
+          const pathLine = L.polyline([[start.lat, start.lng], [end.lat, end.lng]], {
+            color: '#d97707',
+            weight: 2,
+            dashArray: '3, 4',
+            opacity: 0.8
+          }).addTo(map);
+          routeLinesRef.current.push(pathLine);
+        }
+      }
+
+      // Create vehicle marker div
+      const markerHtml = isSelected
+        ? `<div class="relative flex items-center justify-center">
+             <div class="absolute w-8 h-8 rounded-full bg-orange-500/20 animate-ping"></div>
+             <div class="absolute w-6 h-6 rounded-full bg-orange-500/30 border border-orange-500/50"></div>
+             <div class="w-3.5 h-3.5 rounded-full bg-orange-500 border-2 border-white shadow-md flex items-center justify-center text-[8px] font-black text-black">!</div>
+           </div>`
+        : `<div class="relative flex items-center justify-center">
+             <div class="w-3 h-3 rounded-full bg-[${color}] border border-[#161A22]"></div>
+           </div>`;
+
+      const vehicleIcon = L.divIcon({
+        className: 'custom-vehicle-marker',
+        html: markerHtml,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const marker = L.marker([coords.lat, coords.lng], { icon: vehicleIcon }).addTo(map);
+      markersRef.current[veh.registrationNumber] = marker;
+    });
+
+  }, [leafletLoaded, vehicles, simulationTime, selectedReg, trips]);
+
+  // Center map on selected vehicle
+  useEffect(() => {
+    if (!leafletLoaded || !mapInstanceRef.current || !selectedVehicle) return;
+    const coords = getVehicleCoords(selectedVehicle);
+    mapInstanceRef.current.setView([coords.lat, coords.lng], 5);
+  }, [selectedReg, leafletLoaded]);
 
   const triggerTelemetryPing = () => {
     if (!selectedVehicle) return;
     const speed = selectedVehicle.status === VehicleStatus.ON_TRIP ? Math.floor(55 + Math.random() * 15) : 0;
-    const log = `Telemetry Ping [${selectedVehicle.registrationNumber}]: Speed ${speed} mph, Lat ${selectedCoords.y.toFixed(4)}, Lon ${selectedCoords.x.toFixed(4)}. Status: ${selectedVehicle.status.toUpperCase()}`;
+    const log = `Sat-Telemetry [${selectedVehicle.registrationNumber}]: Speed ${speed} mph, Lat ${selectedCoords.lat.toFixed(4)}, Lng ${selectedCoords.lng.toFixed(4)}. Depot Range: Nominal.`;
     setTelemetryLog((prev) => [log, ...prev].slice(0, 5));
   };
 
   return (
     <div id="fleet-map-container" className="h-full flex flex-col lg:flex-row gap-5 p-1 select-none">
       
-      {/* 1. Tactical GPS Map Viewport */}
-      <div className="flex-1 bg-[#161A22] rounded-xl border border-[#2D3748] p-5 flex flex-col relative overflow-hidden shadow-lg min-h-[400px]">
+      {/* 1. Real-World Leaflet Viewport */}
+      <div className="flex-grow bg-[#161A22] rounded-xl border border-[#2D3748] flex flex-col relative overflow-hidden shadow-lg min-h-[450px]">
         
+        {/* Map Canvas div */}
+        <div ref={mapRef} className="w-full h-full min-h-[450px] z-10" />
+
         {/* Top HUD Controls overlay */}
-        <div className="absolute top-4 left-4 z-10 bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-3 flex flex-col gap-2 max-w-xs backdrop-blur-md">
+        <div className="absolute top-4 left-4 z-20 bg-[#0D0F14]/95 border border-[#2D3748] rounded-xl p-4 flex flex-col gap-2.5 max-w-xs shadow-xl backdrop-blur-md">
           <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
             <Compass className="h-4 w-4 text-[#d97707] animate-spin-slow" />
-            <span>GPS Tracking Console</span>
+            <span>Real-World GPS Console</span>
           </div>
           <span className="text-[10px] text-[#dbc2b0]/60">Select active fleet asset below to trace route pathing and live positioning.</span>
           
           <select
-            className="w-full bg-[#161A22] border border-[#2D3748] rounded px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-[#d97707]"
+            className="w-full bg-[#161A22] border border-[#2D3748] rounded-lg px-3 py-2 text-white text-xs font-semibold focus:outline-none focus:border-[#d97707]"
             value={selectedReg}
             onChange={(e) => {
               setSelectedReg(e.target.value);
-              setTelemetryLog((prev) => [`Switched target: ${e.target.value}. Linking receiver...`, ...prev]);
+              setTelemetryLog((prev) => [`Target locked: ${e.target.value}. Recalibrating satellite...`, ...prev]);
             }}
           >
             {vehicles.map((v) => (
@@ -134,135 +270,20 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
           </select>
         </div>
 
-        {/* Legend Hud overlay */}
-        <div className="absolute bottom-4 left-4 z-10 bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-2.5 flex items-center gap-4 text-[10px] text-[#dbc2b0]/80 backdrop-blur-md">
+        {/* Legend HUD overlay */}
+        <div className="absolute bottom-4 left-4 z-20 bg-[#0D0F14]/95 border border-[#2D3748] rounded-lg p-2.5 flex items-center gap-4 text-[10px] text-[#dbc2b0]/80 shadow-md backdrop-blur-md">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#d97707] animate-pulse"></span>
-            <span>Selected Asset</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+            <span>Target Lock</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>On Trip</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span>Active Run</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span>
-            <span>Idle / Parked</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <span>Parked</span>
           </div>
-        </div>
-
-        {/* SVG Tactical Vector Map */}
-        <div className="flex-1 flex items-center justify-center relative w-full h-full min-h-[350px]">
-          <svg
-            className="w-full h-full max-h-[500px]"
-            viewBox="0 0 500 400"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {/* Tactical Grid Pattern */}
-            <defs>
-              <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
-                <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#2D3748" strokeWidth="0.5" opacity="0.35" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-
-            {/* Dotted Hub Routes */}
-            {ROUTES.map((route, idx) => {
-              const start = HUBS[route.from];
-              const end = HUBS[route.to];
-              if (!start || !end) return null;
-              return (
-                <line
-                  key={idx}
-                  x1={start.x}
-                  y1={start.y}
-                  x2={end.x}
-                  y2={end.y}
-                  stroke="#2D3748"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                />
-              );
-            })}
-
-            {/* Selected Active Trip Route Highlighting */}
-            {activeTrip && (() => {
-              const start = HUBS[activeTrip.source];
-              const end = HUBS[activeTrip.destination];
-              if (start && end) {
-                return (
-                  <>
-                    <line
-                      x1={start.x}
-                      y1={start.y}
-                      x2={end.x}
-                      y2={end.y}
-                      stroke="#d97707"
-                      strokeWidth="2"
-                      strokeDasharray="2 3"
-                      opacity="0.8"
-                    />
-                    {/* Pulsing signal wave on destination */}
-                    <circle cx={end.x} cy={end.y} r="15" stroke="#d97707" strokeWidth="1" opacity="0.3" className="animate-ping" />
-                  </>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Hub Depots Markers */}
-            {Object.values(HUBS).map((hub) => (
-              <g key={hub.name} className="cursor-default">
-                <circle cx={hub.x} cy={hub.y} r="5.5" fill="#0D0F14" stroke="#4A5568" strokeWidth="2" />
-                <text
-                  x={hub.x}
-                  y={hub.y - 10}
-                  fill="#dbc2b0"
-                  fontSize="8"
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  opacity="0.75"
-                >
-                  {hub.name.split(' - ')[0]}
-                </text>
-              </g>
-            ))}
-
-            {/* Other Active Vehicles on Trips */}
-            {vehicles.filter(v => v.status === VehicleStatus.ON_TRIP && v.registrationNumber !== selectedReg).map((veh) => {
-              const coords = getVehicleCoords(veh);
-              return (
-                <circle
-                  key={veh.registrationNumber}
-                  cx={coords.x}
-                  cy={coords.y}
-                  r="4"
-                  fill="rgb(16, 185, 129)"
-                  stroke="#161A22"
-                  strokeWidth="1"
-                />
-              );
-            })}
-
-            {/* Selected Vehicle Glowing Signal Target Marker */}
-            {selectedVehicle && (() => {
-              const color = selectedVehicle.status === VehicleStatus.ON_TRIP ? 'rgb(245, 158, 11)' : 'rgb(59, 130, 246)';
-              return (
-                <g>
-                  {/* Glowing Radar Sweep Ring */}
-                  <circle cx={selectedCoords.x} cy={selectedCoords.y} r="12" stroke={color} strokeWidth="1.5" className="animate-ping" opacity="0.6" />
-                  {/* Solid Center Vector */}
-                  <circle cx={selectedCoords.x} cy={selectedCoords.y} r="5" fill={color} stroke="#161A22" strokeWidth="1.5" />
-                  <path
-                    d={`M ${selectedCoords.x} ${selectedCoords.y - 12} L ${selectedCoords.x} ${selectedCoords.y + 12} M ${selectedCoords.x - 12} ${selectedCoords.y} L ${selectedCoords.x + 12} ${selectedCoords.y}`}
-                    stroke={color}
-                    strokeWidth="0.5"
-                    opacity="0.4"
-                  />
-                </g>
-              );
-            })()}
-          </svg>
         </div>
       </div>
 
@@ -370,7 +391,7 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
                 <div className="mt-4 pt-3.5 border-t border-[#2D3748] space-y-3.5">
                   <div>
                     <span className="text-[10px] text-[#dbc2b0]/50 block uppercase">Current Location</span>
-                    <span className="text-white font-bold block">Parked at {selectedCoords.hubName}</span>
+                    <span className="text-white font-bold block">Parked at {selectedCoords.hubName} Hub</span>
                   </div>
                   <div className="flex flex-col items-center gap-2 py-4 text-center text-[#dbc2b0]/60">
                     <ShieldAlert className="h-5 w-5 text-[#2D3748] shrink-0" />
