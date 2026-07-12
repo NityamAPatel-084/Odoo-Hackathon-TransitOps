@@ -14,15 +14,6 @@ import {
   Expense,
   SystemConfig,
 } from './types';
-import {
-  INITIAL_VEHICLES,
-  INITIAL_DRIVERS,
-  INITIAL_TRIPS,
-  INITIAL_MAINTENANCE,
-  INITIAL_FUEL_LOGS,
-  INITIAL_EXPENSES,
-  INITIAL_CONFIG,
-} from './data/initialData';
 
 // Subcomponents
 import LoginScreen from './components/LoginScreen';
@@ -63,41 +54,20 @@ export default function App() {
   });
 
   // --- Core Fleet State ---
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    const saved = localStorage.getItem('transitops_vehicles');
-    return saved ? JSON.parse(saved) : INITIAL_VEHICLES;
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
+  const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>({
+    depotName: 'Main Depot',
+    defaultCurrency: 'USD',
+    distanceUnit: 'miles',
+    timezone: 'UTC',
   });
 
-  const [drivers, setDrivers] = useState<Driver[]>(() => {
-    const saved = localStorage.getItem('transitops_drivers');
-    return saved ? JSON.parse(saved) : INITIAL_DRIVERS;
-  });
-
-  const [trips, setTrips] = useState<Trip[]>(() => {
-    const saved = localStorage.getItem('transitops_trips');
-    return saved ? JSON.parse(saved) : INITIAL_TRIPS;
-  });
-
-  const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>(() => {
-    const saved = localStorage.getItem('transitops_maintenance');
-    return saved ? JSON.parse(saved) : INITIAL_MAINTENANCE;
-  });
-
-  const [fuelLogs, setFuelLogs] = useState<FuelLog[]>(() => {
-    const saved = localStorage.getItem('transitops_fuel');
-    return saved ? JSON.parse(saved) : INITIAL_FUEL_LOGS;
-  });
-
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('transitops_expenses');
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
-  });
-
-  const [systemConfig, setSystemConfig] = useState<SystemConfig>(() => {
-    const saved = localStorage.getItem('transitops_config');
-    return saved ? JSON.parse(saved) : INITIAL_CONFIG;
-  });
-
+  const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('Dashboard');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([
@@ -107,34 +77,30 @@ export default function App() {
   ]);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // --- Persistence Sync ---
+  // --- Fetch Initial Data from Server ---
   useEffect(() => {
-    localStorage.setItem('transitops_vehicles', JSON.stringify(vehicles));
-  }, [vehicles]);
-
-  useEffect(() => {
-    localStorage.setItem('transitops_drivers', JSON.stringify(drivers));
-  }, [drivers]);
-
-  useEffect(() => {
-    localStorage.setItem('transitops_trips', JSON.stringify(trips));
-  }, [trips]);
-
-  useEffect(() => {
-    localStorage.setItem('transitops_maintenance', JSON.stringify(maintenanceLogs));
-  }, [maintenanceLogs]);
-
-  useEffect(() => {
-    localStorage.setItem('transitops_fuel', JSON.stringify(fuelLogs));
-  }, [fuelLogs]);
-
-  useEffect(() => {
-    localStorage.setItem('transitops_expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem('transitops_config', JSON.stringify(systemConfig));
-  }, [systemConfig]);
+    fetch('/api/data')
+      .then((res) => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
+      .then((data) => {
+        setVehicles(data.vehicles || []);
+        setDrivers(data.drivers || []);
+        setTrips(data.trips || []);
+        setMaintenanceLogs(data.maintenanceLogs || []);
+        setFuelLogs(data.fuelLogs || []);
+        setExpenses(data.expenses || []);
+        if (data.systemConfig) {
+          setSystemConfig(data.systemConfig);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load initial database state:', err);
+        setLoading(false);
+      });
+  }, []);
 
   // --- Auth Handlers ---
   const handleLogin = (email: string, role: UserRole) => {
@@ -154,61 +120,137 @@ export default function App() {
   // --- Business Rule Handlers ---
 
   // 1. Add Vehicle (Reg No. must be unique!)
-  const handleAddVehicle = (newVehicle: Vehicle): boolean => {
+  const handleAddVehicle = async (newVehicle: Vehicle): Promise<boolean> => {
     const exists = vehicles.some(
       (v) => v.registrationNumber.toUpperCase() === newVehicle.registrationNumber.toUpperCase()
     );
     if (exists) return false;
 
-    setVehicles([newVehicle, ...vehicles]);
-    setNotifications((prev) => [`Asset Registered: Deployed ${newVehicle.registrationNumber} to current fleet.`, ...prev]);
-    return true;
+    try {
+      const res = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newVehicle),
+      });
+      if (!res.ok) throw new Error('Failed to create vehicle');
+      const savedVehicle = await res.json();
+      setVehicles([savedVehicle, ...vehicles]);
+      setNotifications((prev) => [`Asset Registered: Deployed ${newVehicle.registrationNumber} to current fleet.`, ...prev]);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
-  const handleUpdateVehicle = (updated: Vehicle) => {
-    setVehicles(vehicles.map((v) => (v.registrationNumber === updated.registrationNumber ? updated : v)));
+  const handleUpdateVehicle = async (updated: Vehicle) => {
+    try {
+      const res = await fetch(`/api/vehicles/${updated.registrationNumber}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      if (!res.ok) throw new Error('Failed to update vehicle');
+      const saved = await res.json();
+      setVehicles(vehicles.map((v) => (v.registrationNumber === saved.registrationNumber ? saved : v)));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleDeleteVehicle = (regNum: string) => {
-    setVehicles(vehicles.filter((v) => v.registrationNumber !== regNum));
+  const handleDeleteVehicle = async (regNum: string) => {
+    try {
+      const res = await fetch(`/api/vehicles/${regNum}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete vehicle');
+      setVehicles(vehicles.filter((v) => v.registrationNumber !== regNum));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 2. Add Driver
-  const handleAddDriver = (newDriver: Driver) => {
-    setDrivers([newDriver, ...drivers]);
-    setNotifications((prev) => [`Operator Registered: Added ${newDriver.name} (${newDriver.id}) to logs.`, ...prev]);
+  const handleAddDriver = async (newDriver: Driver) => {
+    try {
+      const res = await fetch('/api/drivers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDriver),
+      });
+      if (!res.ok) throw new Error('Failed to add driver');
+      const saved = await res.json();
+      setDrivers([saved, ...drivers]);
+      setNotifications((prev) => [`Operator Registered: Added ${newDriver.name} (${newDriver.id}) to logs.`, ...prev]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleUpdateDriver = (updated: Driver) => {
-    setDrivers(drivers.map((d) => (d.id === updated.id ? updated : d)));
+  const handleUpdateDriver = async (updated: Driver) => {
+    try {
+      const res = await fetch(`/api/drivers/${updated.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      if (!res.ok) throw new Error('Failed to update driver');
+      const saved = await res.json();
+      setDrivers(drivers.map((d) => (d.id === saved.id ? saved : d)));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleDeleteDriver = (id: string) => {
-    setDrivers(drivers.filter((d) => d.id !== id));
+  const handleDeleteDriver = async (id: string) => {
+    try {
+      const res = await fetch(`/api/drivers/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete driver');
+      setDrivers(drivers.filter((d) => d.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 3. Dispatch & Update Trip (Rules 4, 5, 6, 7, 8)
-  const handleAddTrip = (newTrip: Trip) => {
-    setTrips([newTrip, ...trips]);
+  const handleAddTrip = async (newTrip: Trip) => {
+    try {
+      const res = await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTrip),
+      });
+      if (!res.ok) throw new Error('Failed to add trip');
+      const savedTrip = await res.json();
+      setTrips([savedTrip, ...trips]);
 
-    // Rule 6: Dispatching a trip automatically changes both the vehicle and driver status to On Trip.
-    if (newTrip.status === TripStatus.DISPATCHED) {
-      setVehicles((prevVehicles) =>
-        prevVehicles.map((v) =>
-          v.registrationNumber === newTrip.vehicleReg ? { ...v, status: VehicleStatus.ON_TRIP } : v
-        )
-      );
-      setDrivers((prevDrivers) =>
-        prevDrivers.map((d) =>
-          d.id === newTrip.driverId ? { ...d, status: DriverStatus.ON_TRIP } : d
-        )
-      );
+      // Rule 6: Dispatching a trip automatically changes both the vehicle and driver status to On Trip.
+      if (newTrip.status === TripStatus.DISPATCHED) {
+        const vehicleRes = await fetch(`/api/vehicles/${newTrip.vehicleReg}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: VehicleStatus.ON_TRIP }),
+        });
+        const driverRes = await fetch(`/api/drivers/${newTrip.driverId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: DriverStatus.ON_TRIP }),
+        });
+        if (vehicleRes.ok) {
+          const updatedVeh = await vehicleRes.json();
+          setVehicles(prevVehicles => prevVehicles.map(v => v.registrationNumber === updatedVeh.registrationNumber ? updatedVeh : v));
+        }
+        if (driverRes.ok) {
+          const updatedDrv = await driverRes.json();
+          setDrivers(prevDrivers => prevDrivers.map(d => d.id === updatedDrv.id ? updatedDrv : d));
+        }
+      }
+
+      setNotifications((prev) => [`Transit Dispatched: ${newTrip.id} on route to ${newTrip.destination}.`, ...prev]);
+    } catch (err) {
+      console.error(err);
     }
-
-    setNotifications((prev) => [`Transit Dispatched: ${newTrip.id} on route to ${newTrip.destination}.`, ...prev]);
   };
 
-  const handleUpdateTripStatus = (
+  const handleUpdateTripStatus = async (
     tripId: string,
     newStatus: TripStatus,
     finalOdo?: number,
@@ -217,171 +259,301 @@ export default function App() {
     const targetTrip = trips.find((t) => t.id === tripId);
     if (!targetTrip) return;
 
-    setTrips(
-      trips.map((t) => {
-        if (t.id === tripId) {
-          return {
-            ...t,
-            status: newStatus,
-            finalOdometer: finalOdo,
-            fuelConsumed: fuelConsumedVal,
-          };
+    try {
+      const res = await fetch(`/api/trips/${tripId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          finalOdometer: finalOdo,
+          fuelConsumed: fuelConsumedVal,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to update trip');
+      const savedTrip = await res.json();
+      setTrips(trips.map((t) => (t.id === tripId ? savedTrip : t)));
+
+      // Dynamic State transition releases
+      if (newStatus === TripStatus.COMPLETED) {
+        // Rule 7: Completing a trip automatically changes both the vehicle and driver status back to Available.
+        const currentVeh = vehicles.find(v => v.registrationNumber === targetTrip.vehicleReg);
+        const vehicleStatusRes = await fetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: VehicleStatus.AVAILABLE,
+            odometer: finalOdo || (currentVeh?.odometer || 0) + targetTrip.plannedDistance
+          }),
+        });
+        const driverStatusRes = await fetch(`/api/drivers/${targetTrip.driverId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: DriverStatus.AVAILABLE }),
+        });
+        
+        if (vehicleStatusRes.ok) {
+          const updatedVeh = await vehicleStatusRes.json();
+          setVehicles(prev => prev.map(v => v.registrationNumber === updatedVeh.registrationNumber ? updatedVeh : v));
         }
-        return t;
-      })
-    );
+        if (driverStatusRes.ok) {
+          const updatedDrv = await driverStatusRes.json();
+          setDrivers(prev => prev.map(d => d.id === updatedDrv.id ? updatedDrv : d));
+        }
 
-    // Dynamic State transition releases
-    if (newStatus === TripStatus.COMPLETED) {
-      // Rule 7: Completing a trip automatically changes both the vehicle and driver status back to Available.
-      setVehicles((prevVehicles) =>
-        prevVehicles.map((v) => {
-          if (v.registrationNumber === targetTrip.vehicleReg) {
-            return {
-              ...v,
-              status: VehicleStatus.AVAILABLE,
-              odometer: finalOdo || v.odometer + targetTrip.plannedDistance,
-            };
-          }
-          return v;
-        })
-      );
-      setDrivers((prevDrivers) =>
-        prevDrivers.map((d) =>
-          d.id === targetTrip.driverId ? { ...d, status: DriverStatus.AVAILABLE } : d
-        )
-      );
+        // Create simulated expense audit entry dynamically!
+        const totalToll = Math.round(targetTrip.plannedDistance * 0.15);
+        const newExpenseEntry: Expense = {
+          id: `EXP-${Math.floor(100 + Math.random() * 900)}`,
+          tripId: targetTrip.id,
+          vehicleReg: targetTrip.vehicleReg,
+          toll: totalToll,
+          maintenance: 0,
+          other: 0,
+          total: totalToll,
+          status: 'PENDING',
+        };
+        const expenseRes = await fetch('/api/expenses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newExpenseEntry),
+        });
+        if (expenseRes.ok) {
+          const savedExp = await expenseRes.json();
+          setExpenses((prev) => [savedExp, ...prev]);
+        }
 
-      // Create simulated expense audit entry dynamically!
-      const totalToll = Math.round(targetTrip.plannedDistance * 0.15);
-      const newExpenseEntry: Expense = {
-        id: `EXP-${Math.floor(100 + Math.random() * 900)}`,
-        tripId: targetTrip.id,
-        vehicleReg: targetTrip.vehicleReg,
-        toll: totalToll,
-        maintenance: 0,
-        other: 0,
-        total: totalToll,
-        status: 'PENDING',
-      };
-      setExpenses((prev) => [newExpenseEntry, ...prev]);
-
-      setNotifications((prev) => [
-        `Route Completed: ${targetTrip.id} successfully docked at ${targetTrip.destination}.`,
-        ...prev,
-      ]);
-    } else if (newStatus === TripStatus.CANCELLED) {
-      // Rule 8: Cancelling a dispatched trip restores the vehicle and driver to Available.
-      setVehicles((prevVehicles) =>
-        prevVehicles.map((v) =>
-          v.registrationNumber === targetTrip.vehicleReg ? { ...v, status: VehicleStatus.AVAILABLE } : v
-        )
-      );
-      setDrivers((prevDrivers) =>
-        prevDrivers.map((d) =>
-          d.id === targetTrip.driverId ? { ...d, status: DriverStatus.AVAILABLE } : d
-        )
-      );
-      setNotifications((prev) => [`Dispatch Cancelled: ${targetTrip.id} route terminated. Assets reclaimed.`, ...prev]);
-    } else if (newStatus === TripStatus.DISPATCHED && targetTrip.status === TripStatus.DRAFT) {
-      // Dispatch draft
-      setVehicles((prevVehicles) =>
-        prevVehicles.map((v) =>
-          v.registrationNumber === targetTrip.vehicleReg ? { ...v, status: VehicleStatus.ON_TRIP } : v
-        )
-      );
-      setDrivers((prevDrivers) =>
-        prevDrivers.map((d) =>
-          d.id === targetTrip.driverId ? { ...d, status: DriverStatus.ON_TRIP } : d
-        )
-      );
+        setNotifications((prev) => [
+          `Route Completed: ${targetTrip.id} successfully docked at ${targetTrip.destination}.`,
+          ...prev,
+        ]);
+      } else if (newStatus === TripStatus.CANCELLED) {
+        // Rule 8: Cancelling a dispatched trip restores the vehicle and driver to Available.
+        const vehicleStatusRes = await fetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: VehicleStatus.AVAILABLE }),
+        });
+        const driverStatusRes = await fetch(`/api/drivers/${targetTrip.driverId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: DriverStatus.AVAILABLE }),
+        });
+        if (vehicleStatusRes.ok) {
+          const updatedVeh = await vehicleStatusRes.json();
+          setVehicles(prev => prev.map(v => v.registrationNumber === updatedVeh.registrationNumber ? updatedVeh : v));
+        }
+        if (driverStatusRes.ok) {
+          const updatedDrv = await driverStatusRes.json();
+          setDrivers(prev => prev.map(d => d.id === updatedDrv.id ? updatedDrv : d));
+        }
+        setNotifications((prev) => [`Dispatch Cancelled: ${targetTrip.id} route terminated. Assets reclaimed.`, ...prev]);
+      } else if (newStatus === TripStatus.DISPATCHED && targetTrip.status === TripStatus.DRAFT) {
+        // Dispatch draft
+        const vehicleStatusRes = await fetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: VehicleStatus.ON_TRIP }),
+        });
+        const driverStatusRes = await fetch(`/api/drivers/${targetTrip.driverId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: DriverStatus.ON_TRIP }),
+        });
+        if (vehicleStatusRes.ok) {
+          const updatedVeh = await vehicleStatusRes.json();
+          setVehicles(prev => prev.map(v => v.registrationNumber === updatedVeh.registrationNumber ? updatedVeh : v));
+        }
+        if (driverStatusRes.ok) {
+          const updatedDrv = await driverStatusRes.json();
+          setDrivers(prev => prev.map(d => d.id === updatedDrv.id ? updatedDrv : d));
+        }
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   // 4. Maintenance (Rule 9: Active maintenance automatically shifts vehicle status to In Shop)
-  const handleAddMaintenanceLog = (newLog: MaintenanceLog) => {
-    setMaintenanceLogs([newLog, ...maintenanceLogs]);
+  const handleAddMaintenanceLog = async (newLog: MaintenanceLog) => {
+    try {
+      const res = await fetch('/api/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLog),
+      });
+      if (!res.ok) throw new Error('Failed to add maintenance log');
+      const savedLog = await res.json();
+      setMaintenanceLogs([savedLog, ...maintenanceLogs]);
 
-    if (newLog.status === MaintenanceStatus.IN_SHOP) {
-      setVehicles((prev) =>
-        prev.map((v) => (v.registrationNumber === newLog.vehicleReg ? { ...v, status: VehicleStatus.IN_SHOP } : v))
-      );
+      if (newLog.status === MaintenanceStatus.IN_SHOP) {
+        const vehRes = await fetch(`/api/vehicles/${newLog.vehicleReg}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: VehicleStatus.IN_SHOP }),
+        });
+        if (vehRes.ok) {
+          const updatedVeh = await vehRes.json();
+          setVehicles((prev) => prev.map((v) => (v.registrationNumber === updatedVeh.registrationNumber ? updatedVeh : v)));
+        }
+      }
+
+      // Auto log expense if completed instantly
+      if (newLog.status === MaintenanceStatus.COMPLETED) {
+        const maintenanceExp: Expense = {
+          id: `EXP-${Math.floor(100 + Math.random() * 900)}`,
+          tripId: 'SHOP-REP',
+          vehicleReg: newLog.vehicleReg,
+          toll: 0,
+          maintenance: newLog.cost,
+          other: 0,
+          total: newLog.cost,
+          status: 'APPROVED',
+        };
+        const expRes = await fetch('/api/expenses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(maintenanceExp),
+        });
+        if (expRes.ok) {
+          const savedExp = await expRes.json();
+          setExpenses((prev) => [savedExp, ...prev]);
+        }
+      }
+
+      setNotifications((prev) => [`Service Issued: ${newLog.vehicleReg} checked into service bay.`, ...prev]);
+    } catch (err) {
+      console.error(err);
     }
-
-    // Auto log expense if completed instantly
-    if (newLog.status === MaintenanceStatus.COMPLETED) {
-      const maintenanceExp: Expense = {
-        id: `EXP-${Math.floor(100 + Math.random() * 900)}`,
-        tripId: 'SHOP-REP',
-        vehicleReg: newLog.vehicleReg,
-        toll: 0,
-        maintenance: newLog.cost,
-        other: 0,
-        total: newLog.cost,
-        status: 'APPROVED',
-      };
-      setExpenses((prev) => [maintenanceExp, ...prev]);
-    }
-
-    setNotifications((prev) => [`Service Issued: ${newLog.vehicleReg} checked into service bay.`, ...prev]);
   };
 
-  const handleCompleteMaintenanceLog = (logId: string) => {
+  const handleCompleteMaintenanceLog = async (logId: string) => {
     const targetLog = maintenanceLogs.find((l) => l.id === logId);
     if (!targetLog) return;
 
-    setMaintenanceLogs(
-      maintenanceLogs.map((l) => (l.id === logId ? { ...l, status: MaintenanceStatus.COMPLETED } : l))
-    );
+    try {
+      const res = await fetch(`/api/maintenance/${logId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: MaintenanceStatus.COMPLETED }),
+      });
+      if (!res.ok) throw new Error('Failed to update maintenance log');
+      const savedLog = await res.json();
+      setMaintenanceLogs(maintenanceLogs.map((l) => (l.id === logId ? savedLog : l)));
 
-    // Rule 10: Closing maintenance restores the vehicle to Available (unless retired).
-    setVehicles((prev) =>
-      prev.map((v) => {
-        if (v.registrationNumber === targetLog.vehicleReg) {
-          return {
-            ...v,
-            status: v.status === VehicleStatus.RETIRED ? VehicleStatus.RETIRED : VehicleStatus.AVAILABLE,
-          };
-        }
-        return v;
-      })
-    );
+      // Rule 10: Closing maintenance restores the vehicle to Available (unless retired).
+      const currentVeh = vehicles.find(v => v.registrationNumber === targetLog.vehicleReg);
+      const vehRes = await fetch(`/api/vehicles/${targetLog.vehicleReg}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: currentVeh?.status === VehicleStatus.RETIRED ? VehicleStatus.RETIRED : VehicleStatus.AVAILABLE
+        }),
+      });
+      if (vehRes.ok) {
+        const updatedVeh = await vehRes.json();
+        setVehicles((prev) => prev.map((v) => (v.registrationNumber === updatedVeh.registrationNumber ? updatedVeh : v)));
+      }
 
-    // Auto log expense for closed maintenance
-    const maintenanceExp: Expense = {
-      id: `EXP-${Math.floor(100 + Math.random() * 900)}`,
-      tripId: 'SHOP-REP',
-      vehicleReg: targetLog.vehicleReg,
-      toll: 0,
-      maintenance: targetLog.cost,
-      other: 0,
-      total: targetLog.cost,
-      status: 'APPROVED',
-    };
-    setExpenses((prev) => [maintenanceExp, ...prev]);
+      // Auto log expense for closed maintenance
+      const maintenanceExp: Expense = {
+        id: `EXP-${Math.floor(100 + Math.random() * 900)}`,
+        tripId: 'SHOP-REP',
+        vehicleReg: targetLog.vehicleReg,
+        toll: 0,
+        maintenance: targetLog.cost,
+        other: 0,
+        total: targetLog.cost,
+        status: 'APPROVED',
+      };
+      const expRes = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(maintenanceExp),
+      });
+      if (expRes.ok) {
+        const savedExp = await expRes.json();
+        setExpenses((prev) => [savedExp, ...prev]);
+      }
 
-    setNotifications((prev) => [`Service Completed: Released ${targetLog.vehicleReg} back to dispatch pool.`, ...prev]);
+      setNotifications((prev) => [`Service Completed: Released ${targetLog.vehicleReg} back to dispatch pool.`, ...prev]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // 5. Fuel & Expenses
-  const handleAddFuelLog = (newLog: FuelLog) => {
-    setFuelLogs([newLog, ...fuelLogs]);
-    setNotifications((prev) => [`Fuel Registered: Logged ${newLog.liters} L for ${newLog.vehicleReg}.`, ...prev]);
+  const handleAddFuelLog = async (newLog: FuelLog) => {
+    try {
+      const res = await fetch('/api/fuel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLog),
+      });
+      if (!res.ok) throw new Error('Failed to add fuel log');
+      const savedLog = await res.json();
+      setFuelLogs([savedLog, ...fuelLogs]);
+      setNotifications((prev) => [`Fuel Registered: Logged ${newLog.liters} L for ${newLog.vehicleReg}.`, ...prev]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleAddExpense = (newExp: Expense) => {
-    setExpenses([newExp, ...expenses]);
+  const handleAddExpense = async (newExp: Expense) => {
+    try {
+      const res = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newExp),
+      });
+      if (!res.ok) throw new Error('Failed to add expense');
+      const saved = await res.json();
+      setExpenses([saved, ...expenses]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleUpdateExpenseStatus = (expId: string, status: 'APPROVED' | 'PENDING' | 'FLAGGED') => {
-    setExpenses(expenses.map((e) => (e.id === expId ? { ...e, status } : e)));
-    setNotifications((prev) => [`Expense Audited: ${expId} marked as ${status}.`, ...prev]);
+  const handleUpdateExpenseStatus = async (expId: string, status: 'APPROVED' | 'PENDING' | 'FLAGGED') => {
+    try {
+      const res = await fetch(`/api/expenses/${expId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Failed to update expense');
+      const saved = await res.json();
+      setExpenses(expenses.map((e) => (e.id === expId ? saved : e)));
+      setNotifications((prev) => [`Expense Audited: ${expId} marked as ${status}.`, ...prev]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleSaveConfig = (newConfig: SystemConfig) => {
-    setSystemConfig(newConfig);
-    setNotifications((prev) => [`System Settings: Depot configurations updated successfully.`, ...prev]);
+  const handleSaveConfig = async (newConfig: SystemConfig) => {
+    try {
+      const res = await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig),
+      });
+      if (!res.ok) throw new Error('Failed to save config');
+      const saved = await res.json();
+      setSystemConfig(saved);
+      setNotifications((prev) => [`System Settings: Depot configurations updated successfully.`, ...prev]);
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  // --- Loading Spinner ---
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0D0F14] flex items-center justify-center flex-col text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d97707] mb-4"></div>
+        <p className="text-[#dbc2b0] font-medium">Loading TransitOps Platform...</p>
+      </div>
+    );
+  }
 
   // --- Auth Render Router ---
   if (!currentUser) {
