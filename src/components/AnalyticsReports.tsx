@@ -1,3 +1,7 @@
+/**
+ * @module AnalyticsReports
+ * TransitOps Component Module
+ */
 import React, { useState } from 'react';
 import { Vehicle, Trip, FuelLog, Expense, MaintenanceLog, TripStatus } from '../types';
 import { BarChart3, Download, TrendingUp, DollarSign, Fuel, Check } from 'lucide-react';
