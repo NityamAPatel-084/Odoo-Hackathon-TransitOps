@@ -151,28 +151,29 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
       }>
         
         {/* Top HUD Controls overlay */}
-        <div className="absolute top-4 left-4 z-[400] bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-3 flex flex-col gap-2 max-w-xs backdrop-blur-md">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
-              <Compass className="h-4 w-4 text-[#d97707] animate-spin-slow" />
+        <div className={`absolute top-4 left-4 z-[400] bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-4 flex flex-col gap-3 backdrop-blur-md ${isFullScreen ? 'max-w-sm' : 'max-w-xs'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className={`flex items-center gap-2 text-white font-bold uppercase tracking-wider ${isFullScreen ? 'text-sm' : 'text-xs'}`}>
+              <Compass className={`${isFullScreen ? 'h-5 w-5' : 'h-4 w-4'} text-[#d97707] animate-spin-slow`} />
               <span>GPS Tracking Console</span>
             </div>
-            <button 
-              onClick={() => {
-                setIsFullScreen(!isFullScreen);
-                // Dispatch resize event so leaflet recalculates size
-                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-              }}
-              className="text-[#dbc2b0] hover:text-[#d97707] transition-colors p-1"
-              title={isFullScreen ? "Exit Full Screen" : "Enlarge Map"}
-            >
-              {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </button>
+            {!isFullScreen && (
+              <button 
+                onClick={() => {
+                  setIsFullScreen(true);
+                  setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+                }}
+                className="text-[#dbc2b0] hover:text-[#d97707] transition-colors p-1"
+                title="Enlarge Map"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <span className="text-[10px] text-[#dbc2b0]/60">Select active fleet asset below to trace route pathing and live positioning.</span>
+          <span className={`${isFullScreen ? 'text-xs' : 'text-[10px]'} text-[#dbc2b0]/60`}>Select active fleet asset below to trace route pathing and live positioning.</span>
           
           <select
-            className="w-full bg-[#161A22] border border-[#2D3748] rounded px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-[#d97707]"
+            className={`w-full bg-[#161A22] border border-[#2D3748] rounded px-3 py-2 text-white focus:outline-none focus:border-[#d97707] ${isFullScreen ? 'text-sm' : 'text-xs'}`}
             value={selectedReg}
             onChange={(e) => {
               setSelectedReg(e.target.value);
@@ -187,8 +188,22 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
           </select>
         </div>
 
+        {/* Exit Full Screen Prominent Button */}
+        {isFullScreen && (
+          <button
+            onClick={() => {
+              setIsFullScreen(false);
+              setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+            }}
+            className="absolute top-6 right-6 z-[1000] bg-red-600/90 hover:bg-red-500 text-white font-black py-2.5 px-6 rounded-lg shadow-[0_0_20px_rgba(220,38,38,0.4)] flex items-center gap-2 transition-all uppercase tracking-widest text-sm backdrop-blur-md border border-red-400/50 hover:scale-105"
+          >
+            <Minimize2 className="h-5 w-5" />
+            Exit Full Screen
+          </button>
+        )}
+
         {/* Legend Hud overlay */}
-        <div className="absolute bottom-4 left-4 z-[400] bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-2.5 flex items-center gap-4 text-[10px] text-[#dbc2b0]/80 backdrop-blur-md pointer-events-none">
+        <div className={`absolute bottom-4 left-4 z-[400] bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-2.5 flex items-center gap-4 text-[#dbc2b0]/80 backdrop-blur-md pointer-events-none ${isFullScreen ? 'text-xs' : 'text-[10px]'}`}>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#d97707] animate-pulse"></span>
             <span>Selected Asset</span>
