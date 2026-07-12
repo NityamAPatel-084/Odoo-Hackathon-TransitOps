@@ -1,3 +1,7 @@
+/**
+ * @module FleetRegistry
+ * TransitOps Component Module
+ */
 import React, { useState } from 'react';
 import { Vehicle, VehicleStatus, UserRole } from '../types';
 import { Plus, Search, Tag, Filter, AlertTriangle, Trash2, Edit2, X, Check } from 'lucide-react';
