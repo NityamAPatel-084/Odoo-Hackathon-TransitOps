@@ -146,7 +146,7 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
       {/* 1. Tactical GPS Map Viewport */}
       <div className={
         isFullScreen 
-          ? "fixed inset-0 z-[1000] bg-[#161A22] flex flex-col relative overflow-hidden" 
+          ? "fixed inset-0 w-screen h-screen z-[9999] bg-[#161A22] flex flex-col overflow-hidden m-0 p-0" 
           : "flex-1 bg-[#161A22] rounded-xl border border-[#2D3748] p-5 flex flex-col relative overflow-hidden shadow-lg min-h-[400px]"
       }>
         
