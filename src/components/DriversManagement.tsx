@@ -135,7 +135,7 @@ export default function DriversManagement({
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header and Add Action */}
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-end w-full">
         <div>
           <h2 className="text-2xl font-bold text-white tracking-tight">Driver Registry</h2>
           <p className="text-xs text-[#dbc2b0] max-w-2xl mt-1">
