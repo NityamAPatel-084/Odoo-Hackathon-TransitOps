@@ -18,6 +18,8 @@ export default function FleetRegistry({
   onDeleteVehicle,
 }: FleetRegistryProps) {
   const isManager = userRole === UserRole.FLEET_MANAGER;
+  const BADGE_STYLES = { default: "px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider" };
+  const BADGE_STYLES = { default: "px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider" };
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingReg, setEditingReg] = useState<string | null>(null);
