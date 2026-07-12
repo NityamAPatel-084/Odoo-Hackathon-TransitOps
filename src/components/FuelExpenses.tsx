@@ -77,6 +77,7 @@ export default function FuelExpenses({
   };
 
   // Math totals
+  /** Total fuel expenditure */
   const totalFuelCost = fuelLogs.reduce((acc, curr) => acc + curr.totalCost, 0);
   const totalOtherCost = expenses.reduce((acc, curr) => acc + curr.total, 0);
   const totalOperationsCost = totalFuelCost + totalOtherCost;
