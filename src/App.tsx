@@ -43,6 +43,17 @@ import {
   Info
 } from 'lucide-react';
 
+const NAVIGATION_LINKS = [
+  { id: 'Dashboard', label: 'Overview', icon: LayoutDashboard },
+  { id: 'Fleet', label: 'Vehicle Registry', icon: Truck },
+  { id: 'Drivers', label: 'Driver Directory', icon: Users },
+  { id: 'Trips', label: 'Dispatch Console', icon: Navigation },
+  { id: 'Maintenance', label: 'Service Bay', icon: Wrench },
+  { id: 'Fuel', label: 'Fuel & Expenses', icon: Fuel },
+  { id: 'Analytics', label: 'Reports & Analytics', icon: LineChart },
+  { id: 'Settings', label: 'System Settings', icon: Settings },
+];
+
 export default function App() {
   // --- Auth State ---
   const [currentUser, setCurrentUser] = useState<string | null>(() => {
@@ -668,16 +679,7 @@ export default function App() {
 
           {/* Navigation Links */}
           <nav className="p-4 space-y-1.5">
-            {[
-              { id: 'Dashboard', label: 'Overview', icon: LayoutDashboard },
-              { id: 'Fleet', label: 'Vehicle Registry', icon: Truck },
-              { id: 'Drivers', label: 'Driver Directory', icon: Users },
-              { id: 'Trips', label: 'Dispatch Console', icon: Navigation },
-              { id: 'Maintenance', label: 'Service Bay', icon: Wrench },
-              { id: 'Fuel', label: 'Fuel & Expenses', icon: Fuel },
-              { id: 'Analytics', label: 'Reports & Analytics', icon: LineChart },
-              { id: 'Settings', label: 'System Settings', icon: Settings },
-            ].map((link) => {
+            {NAVIGATION_LINKS.map((link) => {
               const Icon = link.icon;
               const isActive = activeTab === link.id;
               return (
