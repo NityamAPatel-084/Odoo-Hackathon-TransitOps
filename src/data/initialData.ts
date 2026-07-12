@@ -1,3 +1,9 @@
+/**
+ * @file initialData.ts
+ * @description Seed data used exclusively by the Express backend (server.ts) to populate
+ * the SQLite database on first run. This file is NOT imported by the React frontend.
+ * All frontend data is loaded via REST API calls to /api/data.
+ */
 import {
   Vehicle,
   Driver,
