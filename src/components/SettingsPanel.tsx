@@ -1,3 +1,7 @@
+/**
+ * @module SettingsPanel
+ * TransitOps Component Module
+ */
 ﻿import React, { useState } from 'react';
 import { SystemConfig, UserRole } from '../types';
 import { Sliders, Shield, Check, Globe, HelpCircle, Save } from 'lucide-react';
