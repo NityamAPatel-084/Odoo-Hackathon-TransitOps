@@ -114,6 +114,7 @@ export default function FleetRegistry({
     setEditingReg(null);
   };
 
+  /** Filter logic for vehicles */
   // Filtered vehicles
   const filteredVehicles = vehicles.filter((v) => {
     if (filters.type && !v.type.toLowerCase().includes(filters.type.toLowerCase())) {
