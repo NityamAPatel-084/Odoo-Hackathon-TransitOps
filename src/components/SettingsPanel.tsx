@@ -8,6 +8,7 @@ interface SettingsPanelProps {
   onSaveConfig: (newConfig: SystemConfig) => void;
 }
 
+/** Settings Panel */
 export default function SettingsPanel({
   config,
   userRole,
