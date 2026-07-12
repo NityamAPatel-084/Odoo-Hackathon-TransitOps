@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import { 
   INITIAL_VEHICLES, 
   INITIAL_DRIVERS, 
@@ -279,11 +280,19 @@ app.put('/api/config', async (req, res) => {
   }
 });
 
-// Serve frontend in production (dist directory)
-app.use(express.static(path.join(__dirname, 'dist')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
+// Serve frontend in production (only when dist/ build exists)
+const distPath = path.join(__dirname, 'dist');
+if (existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  // Development mode: Vite handles the frontend, just 404 unknown routes
+  app.use((req: express.Request, res: express.Response) => {
+    res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
+  });
+}
 
 // Initialize and start server
 async function start() {

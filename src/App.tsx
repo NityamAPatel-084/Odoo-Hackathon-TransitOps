@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   UserRole,
@@ -120,11 +120,11 @@ export default function App() {
   // --- Business Rule Handlers ---
 
   // 1. Add Vehicle (Reg No. must be unique!)
-  const handleAddVehicle = async (newVehicle: Vehicle): Promise<boolean> => {
+  const handleAddVehicle = async (newVehicle: Vehicle): Promise<'ok' | 'duplicate' | 'error'> => {
     const exists = vehicles.some(
       (v) => v.registrationNumber.toUpperCase() === newVehicle.registrationNumber.toUpperCase()
     );
-    if (exists) return false;
+    if (exists) return 'duplicate';
 
     try {
       const res = await fetch('/api/vehicles', {
@@ -136,10 +136,10 @@ export default function App() {
       const savedVehicle = await res.json();
       setVehicles([savedVehicle, ...vehicles]);
       setNotifications((prev) => [`Asset Registered: Deployed ${newVehicle.registrationNumber} to current fleet.`, ...prev]);
-      return true;
+      return 'ok';
     } catch (err) {
       console.error(err);
-      return false;
+      return 'error';
     }
   };
 

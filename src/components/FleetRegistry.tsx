@@ -1,11 +1,11 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Vehicle, VehicleStatus, UserRole } from '../types';
 import { Plus, Search, Tag, Filter, AlertTriangle, Trash2, Edit2, X, Check } from 'lucide-react';
 
 interface FleetRegistryProps {
   vehicles: Vehicle[];
   userRole: UserRole;
-  onAddVehicle: (vehicle: Vehicle) => Promise<boolean>; // returns true if successful
+  onAddVehicle: (vehicle: Vehicle) => Promise<'ok' | 'duplicate' | 'error'>; // 'ok', 'duplicate', or server 'error'
   onUpdateVehicle: (vehicle: Vehicle) => void;
   onDeleteVehicle: (regNum: string) => void;
 }
@@ -67,8 +67,8 @@ export default function FleetRegistry({
       status,
     };
 
-    const success = await onAddVehicle(newVehicle);
-    if (success) {
+    const result = await onAddVehicle(newVehicle);
+    if (result === 'ok') {
       // Reset form
       setRegNum('');
       setName('');
@@ -79,8 +79,10 @@ export default function FleetRegistry({
       setStatus(VehicleStatus.AVAILABLE);
       setFormError(null);
       setShowAddForm(false);
+    } else if (result === 'duplicate') {
+      setFormError(`Registration number '${cleanRegNum}' already exists. Please use a different unique ID.`);
     } else {
-      setFormError(`Registration number '${cleanRegNum}' already exists. Must be unique.`);
+      setFormError('Server error: Could not save vehicle. Make sure the backend server is running on port 3001.');
     }
   };
 
