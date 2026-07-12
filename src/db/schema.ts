@@ -1,3 +1,7 @@
+/**
+ * @module schema
+ * Documentation for schema.ts
+ */
 import { pgTable, text, integer, doublePrecision, boolean, timestamp } from "drizzle-orm/pg-core";
 
 // 1. Vehicles Table
