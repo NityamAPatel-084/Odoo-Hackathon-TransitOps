@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Info, Navigation, ShieldAlert, Compass, Activity } from 'lucide-react';
+import { MapPin, Info, Navigation, ShieldAlert, Compass, Activity, Maximize2, Minimize2 } from 'lucide-react';
 import { Vehicle, VehicleStatus, Trip, Driver } from '../types';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -71,6 +71,7 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
   const [selectedReg, setSelectedReg] = useState<string>('');
   const [simulationTime, setSimulationTime] = useState<number>(0);
   const [telemetryLog, setTelemetryLog] = useState<string[]>(['GPS tracking interface active.']);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
 
   // Increment simulation time to animate moving vehicles
   useEffect(() => {
@@ -143,13 +144,30 @@ export const FleetMap: React.FC<FleetMapProps> = ({ vehicles, trips, drivers }) 
     <div id="fleet-map-container" className="h-full flex flex-col lg:flex-row gap-5 p-1 select-none">
       
       {/* 1. Tactical GPS Map Viewport */}
-      <div className="flex-1 bg-[#161A22] rounded-xl border border-[#2D3748] p-5 flex flex-col relative overflow-hidden shadow-lg min-h-[400px]">
+      <div className={
+        isFullScreen 
+          ? "fixed inset-0 z-[1000] bg-[#161A22] flex flex-col relative overflow-hidden" 
+          : "flex-1 bg-[#161A22] rounded-xl border border-[#2D3748] p-5 flex flex-col relative overflow-hidden shadow-lg min-h-[400px]"
+      }>
         
         {/* Top HUD Controls overlay */}
         <div className="absolute top-4 left-4 z-[400] bg-[#0D0F14]/90 border border-[#2D3748] rounded-lg p-3 flex flex-col gap-2 max-w-xs backdrop-blur-md">
-          <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
-            <Compass className="h-4 w-4 text-[#d97707] animate-spin-slow" />
-            <span>GPS Tracking Console</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
+              <Compass className="h-4 w-4 text-[#d97707] animate-spin-slow" />
+              <span>GPS Tracking Console</span>
+            </div>
+            <button 
+              onClick={() => {
+                setIsFullScreen(!isFullScreen);
+                // Dispatch resize event so leaflet recalculates size
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+              }}
+              className="text-[#dbc2b0] hover:text-[#d97707] transition-colors p-1"
+              title={isFullScreen ? "Exit Full Screen" : "Enlarge Map"}
+            >
+              {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
           </div>
           <span className="text-[10px] text-[#dbc2b0]/60">Select active fleet asset below to trace route pathing and live positioning.</span>
           
