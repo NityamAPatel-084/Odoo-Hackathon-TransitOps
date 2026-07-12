@@ -18,6 +18,7 @@ export default function MaintenanceOps({
   onCompleteLog,
 }: MaintenanceOpsProps) {
   const isManager = userRole === UserRole.FLEET_MANAGER;
+  const STATUS_COLORS = { comp: "text-emerald-400" };
 
   const [showForm, setShowForm] = useState(false);
 
