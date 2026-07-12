@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Trip, TripStatus, Vehicle, VehicleStatus, Driver, DriverStatus, UserRole } from '../types';
 import { Navigation, Plus, MapPin, Truck, User, Scale, ArrowRight, AlertTriangle, ShieldCheck, CheckCircle, HelpCircle, X } from 'lucide-react';
 
@@ -10,6 +10,8 @@ interface TripDispatchProps {
   onAddTrip: (trip: Trip) => void;
   onUpdateTripStatus: (tripId: string, status: TripStatus, finalOdo?: number, fuelConsumed?: number) => void;
 }
+
+const STATUS_TABS = ['ALL', TripStatus.DISPATCHED, TripStatus.DRAFT, TripStatus.COMPLETED, TripStatus.CANCELLED] as const;
 
 export default function TripDispatch({
   trips,
@@ -330,7 +332,7 @@ export default function TripDispatch({
           
           {/* Status Tabs */}
           <div className="flex border-b border-[#2D3748] gap-1 shrink-0 bg-[#161A22] p-1 rounded-lg border">
-            {(['ALL', TripStatus.DISPATCHED, TripStatus.DRAFT, TripStatus.COMPLETED, TripStatus.CANCELLED] as const).map((tab) => (
+            {STATUS_TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
