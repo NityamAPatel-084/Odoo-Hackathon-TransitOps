@@ -1,4 +1,8 @@
 /**
+ * @module types
+ * Documentation for types.ts
+ */
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
