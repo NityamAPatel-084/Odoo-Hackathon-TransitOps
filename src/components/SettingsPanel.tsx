@@ -101,7 +101,7 @@ export default function SettingsPanel({
               <label className="text-[10px] font-bold text-[#dbc2b0] uppercase tracking-wider block">Central Depot Name</label>
               <input
                 type="text"
-                className="w-full bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-[#ffb77d]"
+                className="w-full bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-white text-xs focus:outline-none focus:border-[#ffb77d] transition-colors duration-200"
                 value={depotName}
                 onChange={(e) => setDepotName(e.target.value)}
                 required
