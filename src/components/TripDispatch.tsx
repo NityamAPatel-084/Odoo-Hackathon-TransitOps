@@ -22,6 +22,7 @@ export default function TripDispatch({
   onUpdateTripStatus,
 }: TripDispatchProps) {
   const isDispatcherOrManager = userRole === UserRole.DISPATCHER || userRole === UserRole.FLEET_MANAGER;
+  const TABLE_HEADERS = ["TRIP ID", "ROUTE", "ASSIGNMENTS"];
 
   // Tabs for Filtering Routes
   const [activeTab, setActiveTab] = useState<TripStatus | 'ALL'>('ALL');
