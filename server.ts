@@ -19,7 +19,12 @@ app.use(express.json());
 
 // REST API Endpoints
 
-// GET all data
+/**
+ * DATA INITIALIZATION API
+ * GET /api/data
+ * Fetches the entire initial state of the platform including all vehicles, 
+ * drivers, trips, logs, expenses, and system configurations.
+ */
 app.get('/api/data', async (req, res) => {
   try {
     const vehicles = await prisma.vehicle.findMany();
@@ -55,7 +60,10 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
-// VEHICLES
+/**
+ * VEHICLES API
+ * Endpoints for managing the fleet registry (Create, Update, Delete).
+ */
 app.post('/api/vehicles', async (req, res) => {
   try {
     const vehicle = await prisma.vehicle.create({ data: req.body });
@@ -86,7 +94,10 @@ app.delete('/api/vehicles/:reg', async (req, res) => {
   }
 });
 
-// DRIVERS
+/**
+ * DRIVERS API
+ * Endpoints for managing driver profiles, licenses, and telematic scores.
+ */
 app.post('/api/drivers', async (req, res) => {
   try {
     const driver = await prisma.driver.create({ data: req.body });
@@ -117,7 +128,10 @@ app.delete('/api/drivers/:id', async (req, res) => {
   }
 });
 
-// TRIPS
+/**
+ * TRIPS API
+ * Endpoints for handling dispatch assignments and state transitions.
+ */
 app.post('/api/trips', async (req, res) => {
   try {
     const trip = await prisma.trip.create({ data: req.body });
@@ -139,7 +153,10 @@ app.put('/api/trips/:id', async (req, res) => {
   }
 });
 
-// MAINTENANCE
+/**
+ * MAINTENANCE API
+ * Endpoints for logging service bay records and vehicle repairs.
+ */
 app.post('/api/maintenance', async (req, res) => {
   try {
     const log = await prisma.maintenanceLog.create({ data: req.body });
@@ -161,7 +178,10 @@ app.put('/api/maintenance/:id', async (req, res) => {
   }
 });
 
-// FUEL
+/**
+ * FUEL API
+ * Endpoints for logging fuel consumption across the fleet.
+ */
 app.post('/api/fuel', async (req, res) => {
   try {
     const log = await prisma.fuelLog.create({ data: req.body });
@@ -171,7 +191,10 @@ app.post('/api/fuel', async (req, res) => {
   }
 });
 
-// EXPENSES
+/**
+ * EXPENSES API
+ * Endpoints for recording tolls, maintenance costs, and general transit expenses.
+ */
 app.post('/api/expenses', async (req, res) => {
   try {
     const expense = await prisma.expense.create({ data: req.body });
@@ -193,7 +216,10 @@ app.put('/api/expenses/:id', async (req, res) => {
   }
 });
 
-// CONFIG
+/**
+ * SYSTEM CONFIGURATION API
+ * Endpoints for updating depot settings like timezone and currency.
+ */
 app.put('/api/config', async (req, res) => {
   try {
     const config = await prisma.systemConfig.upsert({
