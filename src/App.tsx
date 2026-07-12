@@ -38,8 +38,6 @@ import {
   Settings,
   LogOut,
   Bell,
-  ChevronDown,
-  ShieldAlert,
   Info
 } from 'lucide-react';
 
@@ -131,6 +129,12 @@ export default function App() {
   // --- Business Rule Handlers ---
 
   // 1. Add Vehicle (Reg No. must be unique!)
+  /**
+   * Registers a new vehicle into the fleet database.
+   * Ensures that the registration number is completely unique before dispatching.
+   * @param newVehicle The vehicle object to create
+   * @returns 'ok' on success, 'duplicate' if the reg number exists, 'error' on failure
+   */
   const handleAddVehicle = async (newVehicle: Vehicle): Promise<'ok' | 'duplicate' | 'error'> => {
     const exists = vehicles.some(
       (v) => v.registrationNumber.toUpperCase() === newVehicle.registrationNumber.toUpperCase()
@@ -180,6 +184,10 @@ export default function App() {
   };
 
   // 2. Add Driver
+  /**
+   * Registers a new driver into the personnel database.
+   * @param newDriver The driver object to create
+   */
   const handleAddDriver = async (newDriver: Driver) => {
     try {
       const res = await fetch('/api/drivers', {
