@@ -118,7 +118,7 @@ export default function TripDispatch({
   });
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-6 w-full relative">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white tracking-tight">Active Dispatch Console</h2>
