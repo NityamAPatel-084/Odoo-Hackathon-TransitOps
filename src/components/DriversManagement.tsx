@@ -1,6 +1,6 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Driver, DriverStatus, UserRole } from '../types';
-import { Plus, Search, Filter, AlertTriangle, CheckCircle, ShieldAlert, X, ShieldCheck, Mail, Phone, Calendar } from 'lucide-react';
+import { Plus, Search, Filter, AlertTriangle, CheckCircle, ShieldAlert, X, ShieldCheck, Mail, Phone, Calendar, Edit2 } from 'lucide-react';
 
 interface DriversManagementProps {
   drivers: Driver[];
@@ -527,7 +527,7 @@ export default function DriversManagement({
                               className="text-[#ffb77d] hover:text-[#d97707] p-1"
                               title="Edit Driver profile"
                             >
-                              <Plus className="h-4 w-4 rotate-45" /> {/* Use Plus rotated for edit or custom */}
+                              <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => {
