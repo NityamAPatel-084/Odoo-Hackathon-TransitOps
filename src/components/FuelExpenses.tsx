@@ -1,3 +1,7 @@
+/**
+ * @module FuelExpenses
+ * TransitOps Component Module
+ */
 ﻿import React, { useState } from 'react';
 import { FuelLog, Expense, Vehicle, UserRole } from '../types';
 import { Fuel, Plus, TrendingUp, DollarSign, ListFilter, AlertTriangle, ArrowUpRight, CheckCircle2, RefreshCw, X } from 'lucide-react';
