@@ -48,8 +48,6 @@ import {
   LogOut,
   Bell,
   ChevronDown,
-  AlertTriangle,
-  User,
   ShieldAlert,
   Info
 } from 'lucide-react';
