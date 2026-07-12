@@ -18,6 +18,12 @@ import {
   SystemConfig,
 } from '../types';
 
+/**
+ * MOCK DATABASE SCHEMA
+ * The following arrays represent the initial state of the application's mock database.
+ * In a production environment, this data would be fetched from a backend API.
+ */
+
 export const INITIAL_VEHICLES: Vehicle[] = [
   {
     registrationNumber: 'TRK-9021',
