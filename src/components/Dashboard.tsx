@@ -38,6 +38,8 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
   const nonRetiredTotal = totalVehicles - retiredVehicles;
   const utilization = nonRetiredTotal > 0 ? Math.round((activeVehicles / nonRetiredTotal) * 100) : 0;
 
+  const getPercentage = (count: number) => totalVehicles > 0 ? Math.round((count / totalVehicles) * 100) : 0;
+
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header & Filters */}
@@ -252,12 +254,12 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1.5">
                 <span className="text-[#dbc2b0]">Available for Dispatch</span>
-                <span className="text-white">{availableVehicles} ({totalVehicles > 0 ? Math.round((availableVehicles / totalVehicles) * 100) : 0}%)</span>
+                <span className="text-white">{availableVehicles} ({getPercentage(availableVehicles)}%)</span>
               </div>
               <div className="w-full bg-[#0D0F14] rounded-full h-2 border border-[#2D3748]">
                 <div 
                   className="bg-[#10B981] h-2 rounded-full transition-all duration-500" 
-                  style={{ width: `${totalVehicles > 0 ? (availableVehicles / totalVehicles) * 100 : 0}%` }} 
+                  style={{ width: `${getPercentage(availableVehicles)}%` }} 
                 />
               </div>
             </div>
@@ -266,12 +268,12 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1.5">
                 <span className="text-[#dbc2b0]">Dispatched (On Trip)</span>
-                <span className="text-white">{activeVehicles} ({totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0}%)</span>
+                <span className="text-white">{activeVehicles} ({getPercentage(activeVehicles)}%)</span>
               </div>
               <div className="w-full bg-[#0D0F14] rounded-full h-2 border border-[#2D3748]">
                 <div 
                   className="bg-[#3B82F6] h-2 rounded-full transition-all duration-500" 
-                  style={{ width: `${totalVehicles > 0 ? (activeVehicles / totalVehicles) * 100 : 0}%` }} 
+                  style={{ width: `${getPercentage(activeVehicles)}%` }} 
                 />
               </div>
             </div>
@@ -280,12 +282,12 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1.5">
                 <span className="text-[#dbc2b0]">Service Bay (In Shop)</span>
-                <span className="text-white">{inMaintenanceVehicles} ({totalVehicles > 0 ? Math.round((inMaintenanceVehicles / totalVehicles) * 100) : 0}%)</span>
+                <span className="text-white">{inMaintenanceVehicles} ({getPercentage(inMaintenanceVehicles)}%)</span>
               </div>
               <div className="w-full bg-[#0D0F14] rounded-full h-2 border border-[#2D3748]">
                 <div 
                   className="bg-[#d97707] h-2 rounded-full transition-all duration-500" 
-                  style={{ width: `${totalVehicles > 0 ? (inMaintenanceVehicles / totalVehicles) * 100 : 0}%` }} 
+                  style={{ width: `${getPercentage(inMaintenanceVehicles)}%` }} 
                 />
               </div>
             </div>
@@ -294,12 +296,12 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1.5">
                 <span className="text-[#dbc2b0]">Decommissioned (Retired)</span>
-                <span className="text-white">{retiredVehicles} ({totalVehicles > 0 ? Math.round((retiredVehicles / totalVehicles) * 100) : 0}%)</span>
+                <span className="text-white">{retiredVehicles} ({getPercentage(retiredVehicles)}%)</span>
               </div>
               <div className="w-full bg-[#0D0F14] rounded-full h-2 border border-[#2D3748]">
                 <div 
                   className="bg-red-500/50 h-2 rounded-full transition-all duration-500" 
-                  style={{ width: `${totalVehicles > 0 ? (retiredVehicles / totalVehicles) * 100 : 0}%` }} 
+                  style={{ width: `${getPercentage(retiredVehicles)}%` }} 
                 />
               </div>
             </div>
