@@ -5,7 +5,7 @@ import { Plus, Search, Tag, Filter, AlertTriangle, Trash2, Edit2, X, Check } fro
 interface FleetRegistryProps {
   vehicles: Vehicle[];
   userRole: UserRole;
-  onAddVehicle: (vehicle: Vehicle) => boolean; // returns true if successful
+  onAddVehicle: (vehicle: Vehicle) => Promise<boolean>; // returns true if successful
   onUpdateVehicle: (vehicle: Vehicle) => void;
   onDeleteVehicle: (regNum: string) => void;
 }
@@ -48,7 +48,7 @@ export default function FleetRegistry({
   const [editStatus, setEditStatus] = useState<VehicleStatus>(VehicleStatus.AVAILABLE);
 
   // Handle adding
-  const handleSubmitAdd = (e: React.FormEvent) => {
+  const handleSubmitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regNum || !name || !model) {
       setFormError('Please fill in all required fields.');
@@ -67,7 +67,7 @@ export default function FleetRegistry({
       status,
     };
 
-    const success = onAddVehicle(newVehicle);
+    const success = await onAddVehicle(newVehicle);
     if (success) {
       // Reset form
       setRegNum('');
