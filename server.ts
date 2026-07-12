@@ -4,15 +4,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
-import { 
-  INITIAL_VEHICLES, 
-  INITIAL_DRIVERS, 
-  INITIAL_TRIPS, 
-  INITIAL_MAINTENANCE, 
-  INITIAL_FUEL_LOGS, 
-  INITIAL_EXPENSES, 
-  INITIAL_CONFIG 
-} from './src/data/initialData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,70 +16,6 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
-// Helper function to seed data if database is empty
-async function seedDatabaseIfEmpty() {
-  const vehicleCount = await prisma.vehicle.count();
-  if (vehicleCount === 0) {
-    console.log('Database is empty. Seeding initial data...');
-
-    // 1. Seed Config
-    await prisma.systemConfig.create({
-      data: {
-        id: 1,
-        depotName: INITIAL_CONFIG.depotName,
-        defaultCurrency: INITIAL_CONFIG.defaultCurrency,
-        distanceUnit: INITIAL_CONFIG.distanceUnit,
-        timezone: INITIAL_CONFIG.timezone,
-      }
-    });
-
-    // 2. Seed Vehicles
-    for (const v of INITIAL_VEHICLES) {
-      await prisma.vehicle.create({ data: v });
-    }
-
-    // 3. Seed Drivers
-    for (const d of INITIAL_DRIVERS) {
-      await prisma.driver.create({ data: d });
-    }
-
-    // 4. Seed Trips
-    for (const t of INITIAL_TRIPS) {
-      await prisma.trip.create({
-        data: {
-          id: t.id,
-          source: t.source,
-          destination: t.destination,
-          vehicleReg: t.vehicleReg,
-          driverId: t.driverId,
-          cargoWeight: t.cargoWeight,
-          plannedDistance: t.plannedDistance,
-          status: t.status,
-          eta: t.eta,
-          finalOdometer: t.finalOdometer || null,
-          fuelConsumed: t.fuelConsumed || null,
-        }
-      });
-    }
-
-    // 5. Seed Maintenance
-    for (const m of INITIAL_MAINTENANCE) {
-      await prisma.maintenanceLog.create({ data: m });
-    }
-
-    // 6. Seed Fuel Logs
-    for (const f of INITIAL_FUEL_LOGS) {
-      await prisma.fuelLog.create({ data: f });
-    }
-
-    // 7. Seed Expenses
-    for (const e of INITIAL_EXPENSES) {
-      await prisma.expense.create({ data: e });
-    }
-
-    console.log('Seeding completed successfully!');
-  }
-}
 
 // REST API Endpoints
 
@@ -297,7 +224,6 @@ if (existsSync(distPath)) {
 // Initialize and start server
 async function start() {
   try {
-    await seedDatabaseIfEmpty();
     app.listen(PORT, () => {
       console.log(`Backend server running on http://localhost:${PORT}`);
     });
