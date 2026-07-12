@@ -1,3 +1,7 @@
+/**
+ * @module DriversManagement
+ * TransitOps Component Module
+ */
 import React, { useState } from 'react';
 import { Driver, DriverStatus, UserRole } from '../types';
 import { Plus, Search, Filter, AlertTriangle, CheckCircle, ShieldAlert, X, ShieldCheck, Mail, Phone, Calendar, Edit2 } from 'lucide-react';
