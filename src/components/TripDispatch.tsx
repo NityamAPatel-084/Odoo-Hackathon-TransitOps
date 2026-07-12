@@ -1,8 +1,4 @@
-/**
- * @module TripDispatch
- * TransitOps Component Module
- */
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Trip, TripStatus, Vehicle, VehicleStatus, Driver, DriverStatus, UserRole } from '../types';
 import { Navigation, Plus, MapPin, Truck, User, Scale, ArrowRight, AlertTriangle, ShieldCheck, CheckCircle, HelpCircle, X } from 'lucide-react';
 
@@ -15,8 +11,6 @@ interface TripDispatchProps {
   onUpdateTripStatus: (tripId: string, status: TripStatus, finalOdo?: number, fuelConsumed?: number) => void;
 }
 
-const STATUS_TABS = ['ALL', TripStatus.DISPATCHED, TripStatus.DRAFT, TripStatus.COMPLETED, TripStatus.CANCELLED] as const;
-
 export default function TripDispatch({
   trips,
   vehicles,
@@ -26,7 +20,6 @@ export default function TripDispatch({
   onUpdateTripStatus,
 }: TripDispatchProps) {
   const isDispatcherOrManager = userRole === UserRole.DISPATCHER || userRole === UserRole.FLEET_MANAGER;
-  const TABLE_HEADERS = ["TRIP ID", "ROUTE", "ASSIGNMENTS"];
 
   // Tabs for Filtering Routes
   const [activeTab, setActiveTab] = useState<TripStatus | 'ALL'>('ALL');
@@ -122,7 +115,7 @@ export default function TripDispatch({
   });
 
   return (
-    <div className="flex flex-col gap-6 w-full relative">
+    <div className="flex flex-col gap-6 w-full">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white tracking-tight">Active Dispatch Console</h2>
@@ -337,7 +330,7 @@ export default function TripDispatch({
           
           {/* Status Tabs */}
           <div className="flex border-b border-[#2D3748] gap-1 shrink-0 bg-[#161A22] p-1 rounded-lg border">
-            {STATUS_TABS.map((tab) => (
+            {(['ALL', TripStatus.DISPATCHED, TripStatus.DRAFT, TripStatus.COMPLETED, TripStatus.CANCELLED] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

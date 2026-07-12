@@ -1,7 +1,3 @@
-/**
- * @module MaintenanceOps
- * TransitOps Component Module
- */
 ﻿import React, { useState } from 'react';
 import { MaintenanceLog, MaintenanceStatus, Vehicle, VehicleStatus, UserRole } from '../types';
 import { Wrench, Plus, CheckCircle, Clock, AlertTriangle, ArrowRight, DollarSign, Calendar, X } from 'lucide-react';
@@ -22,7 +18,6 @@ export default function MaintenanceOps({
   onCompleteLog,
 }: MaintenanceOpsProps) {
   const isManager = userRole === UserRole.FLEET_MANAGER;
-  const STATUS_COLORS = { comp: "text-emerald-400" };
 
   const [showForm, setShowForm] = useState(false);
 

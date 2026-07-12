@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * Represents the hierarchical roles within the TransitOps platform.
- * Determines access control to features like CRUD operations and system configurations.
- */
 export enum UserRole {
   FLEET_MANAGER = 'Fleet Manager',
   DISPATCHER = 'Dispatcher',

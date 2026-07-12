@@ -1,7 +1,3 @@
-/**
- * @module App
- * TransitOps Component Module
- */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -29,6 +25,7 @@ import MaintenanceOps from './components/MaintenanceOps';
 import FuelExpenses from './components/FuelExpenses';
 import AnalyticsReports from './components/AnalyticsReports';
 import SettingsPanel from './components/SettingsPanel';
+import { FleetMap } from './components/FleetMap';
 
 // Icons
 import {
@@ -42,19 +39,11 @@ import {
   Settings,
   LogOut,
   Bell,
-  Info
+  ChevronDown,
+  ShieldAlert,
+  Info,
+  Map
 } from 'lucide-react';
-
-const NAVIGATION_LINKS = [
-  { id: 'Dashboard', label: 'Overview', icon: LayoutDashboard },
-  { id: 'Fleet', label: 'Vehicle Registry', icon: Truck },
-  { id: 'Drivers', label: 'Driver Directory', icon: Users },
-  { id: 'Trips', label: 'Dispatch Console', icon: Navigation },
-  { id: 'Maintenance', label: 'Service Bay', icon: Wrench },
-  { id: 'Fuel', label: 'Fuel & Expenses', icon: Fuel },
-  { id: 'Analytics', label: 'Reports & Analytics', icon: LineChart },
-  { id: 'Settings', label: 'System Settings', icon: Settings },
-];
 
 export default function App() {
   // --- Auth State ---
@@ -91,16 +80,8 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   // --- Fetch Initial Data from Server ---
-  const customFetch = (url: string, options: RequestInit = {}) => {
-    const headers = {
-      ...options.headers,
-      'X-User-Role': userRole || ''
-    };
-    return fetch(url, { ...options, headers });
-  };
-
   useEffect(() => {
-    customFetch('/api/data')
+    fetch('/api/data')
       .then((res) => {
         if (!res.ok) throw new Error('Network response was not ok');
         return res.json();
@@ -141,12 +122,6 @@ export default function App() {
   // --- Business Rule Handlers ---
 
   // 1. Add Vehicle (Reg No. must be unique!)
-  /**
-   * Registers a new vehicle into the fleet database.
-   * Ensures that the registration number is completely unique before dispatching.
-   * @param newVehicle The vehicle object to create
-   * @returns 'ok' on success, 'duplicate' if the reg number exists, 'error' on failure
-   */
   const handleAddVehicle = async (newVehicle: Vehicle): Promise<'ok' | 'duplicate' | 'error'> => {
     const exists = vehicles.some(
       (v) => v.registrationNumber.toUpperCase() === newVehicle.registrationNumber.toUpperCase()
@@ -154,7 +129,7 @@ export default function App() {
     if (exists) return 'duplicate';
 
     try {
-      const res = await customFetch('/api/vehicles', {
+      const res = await fetch('/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newVehicle),
@@ -172,7 +147,7 @@ export default function App() {
 
   const handleUpdateVehicle = async (updated: Vehicle) => {
     try {
-      const res = await customFetch(`/api/vehicles/${updated.registrationNumber}`, {
+      const res = await fetch(`/api/vehicles/${updated.registrationNumber}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated),
@@ -187,7 +162,7 @@ export default function App() {
 
   const handleDeleteVehicle = async (regNum: string) => {
     try {
-      const res = await customFetch(`/api/vehicles/${regNum}`, { method: 'DELETE' });
+      const res = await fetch(`/api/vehicles/${regNum}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete vehicle');
       setVehicles(vehicles.filter((v) => v.registrationNumber !== regNum));
     } catch (err) {
@@ -196,13 +171,9 @@ export default function App() {
   };
 
   // 2. Add Driver
-  /**
-   * Registers a new driver into the personnel database.
-   * @param newDriver The driver object to create
-   */
   const handleAddDriver = async (newDriver: Driver) => {
     try {
-      const res = await customFetch('/api/drivers', {
+      const res = await fetch('/api/drivers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newDriver),
@@ -218,7 +189,7 @@ export default function App() {
 
   const handleUpdateDriver = async (updated: Driver) => {
     try {
-      const res = await customFetch(`/api/drivers/${updated.id}`, {
+      const res = await fetch(`/api/drivers/${updated.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated),
@@ -233,7 +204,7 @@ export default function App() {
 
   const handleDeleteDriver = async (id: string) => {
     try {
-      const res = await customFetch(`/api/drivers/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/drivers/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete driver');
       setDrivers(drivers.filter((d) => d.id !== id));
     } catch (err) {
@@ -244,7 +215,7 @@ export default function App() {
   // 3. Dispatch & Update Trip (Rules 4, 5, 6, 7, 8)
   const handleAddTrip = async (newTrip: Trip) => {
     try {
-      const res = await customFetch('/api/trips', {
+      const res = await fetch('/api/trips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTrip),
@@ -255,12 +226,12 @@ export default function App() {
 
       // Rule 6: Dispatching a trip automatically changes both the vehicle and driver status to On Trip.
       if (newTrip.status === TripStatus.DISPATCHED) {
-        const vehicleRes = await customFetch(`/api/vehicles/${newTrip.vehicleReg}`, {
+        const vehicleRes = await fetch(`/api/vehicles/${newTrip.vehicleReg}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: VehicleStatus.ON_TRIP }),
         });
-        const driverRes = await customFetch(`/api/drivers/${newTrip.driverId}`, {
+        const driverRes = await fetch(`/api/drivers/${newTrip.driverId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: DriverStatus.ON_TRIP }),
@@ -291,7 +262,7 @@ export default function App() {
     if (!targetTrip) return;
 
     try {
-      const res = await customFetch(`/api/trips/${tripId}`, {
+      const res = await fetch(`/api/trips/${tripId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -308,7 +279,7 @@ export default function App() {
       if (newStatus === TripStatus.COMPLETED) {
         // Rule 7: Completing a trip automatically changes both the vehicle and driver status back to Available.
         const currentVeh = vehicles.find(v => v.registrationNumber === targetTrip.vehicleReg);
-        const vehicleStatusRes = await customFetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
+        const vehicleStatusRes = await fetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -316,7 +287,7 @@ export default function App() {
             odometer: finalOdo || (currentVeh?.odometer || 0) + targetTrip.plannedDistance
           }),
         });
-        const driverStatusRes = await customFetch(`/api/drivers/${targetTrip.driverId}`, {
+        const driverStatusRes = await fetch(`/api/drivers/${targetTrip.driverId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: DriverStatus.AVAILABLE }),
@@ -343,7 +314,7 @@ export default function App() {
           total: totalToll,
           status: 'PENDING',
         };
-        const expenseRes = await customFetch('/api/expenses', {
+        const expenseRes = await fetch('/api/expenses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newExpenseEntry),
@@ -359,12 +330,12 @@ export default function App() {
         ]);
       } else if (newStatus === TripStatus.CANCELLED) {
         // Rule 8: Cancelling a dispatched trip restores the vehicle and driver to Available.
-        const vehicleStatusRes = await customFetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
+        const vehicleStatusRes = await fetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: VehicleStatus.AVAILABLE }),
         });
-        const driverStatusRes = await customFetch(`/api/drivers/${targetTrip.driverId}`, {
+        const driverStatusRes = await fetch(`/api/drivers/${targetTrip.driverId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: DriverStatus.AVAILABLE }),
@@ -380,12 +351,12 @@ export default function App() {
         setNotifications((prev) => [`Dispatch Cancelled: ${targetTrip.id} route terminated. Assets reclaimed.`, ...prev]);
       } else if (newStatus === TripStatus.DISPATCHED && targetTrip.status === TripStatus.DRAFT) {
         // Dispatch draft
-        const vehicleStatusRes = await customFetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
+        const vehicleStatusRes = await fetch(`/api/vehicles/${targetTrip.vehicleReg}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: VehicleStatus.ON_TRIP }),
         });
-        const driverStatusRes = await customFetch(`/api/drivers/${targetTrip.driverId}`, {
+        const driverStatusRes = await fetch(`/api/drivers/${targetTrip.driverId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: DriverStatus.ON_TRIP }),
@@ -407,7 +378,7 @@ export default function App() {
   // 4. Maintenance (Rule 9: Active maintenance automatically shifts vehicle status to In Shop)
   const handleAddMaintenanceLog = async (newLog: MaintenanceLog) => {
     try {
-      const res = await customFetch('/api/maintenance', {
+      const res = await fetch('/api/maintenance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLog),
@@ -417,7 +388,7 @@ export default function App() {
       setMaintenanceLogs([savedLog, ...maintenanceLogs]);
 
       if (newLog.status === MaintenanceStatus.IN_SHOP) {
-        const vehRes = await customFetch(`/api/vehicles/${newLog.vehicleReg}`, {
+        const vehRes = await fetch(`/api/vehicles/${newLog.vehicleReg}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: VehicleStatus.IN_SHOP }),
@@ -440,7 +411,7 @@ export default function App() {
           total: newLog.cost,
           status: 'APPROVED',
         };
-        const expRes = await customFetch('/api/expenses', {
+        const expRes = await fetch('/api/expenses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(maintenanceExp),
@@ -462,7 +433,7 @@ export default function App() {
     if (!targetLog) return;
 
     try {
-      const res = await customFetch(`/api/maintenance/${logId}`, {
+      const res = await fetch(`/api/maintenance/${logId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: MaintenanceStatus.COMPLETED }),
@@ -473,7 +444,7 @@ export default function App() {
 
       // Rule 10: Closing maintenance restores the vehicle to Available (unless retired).
       const currentVeh = vehicles.find(v => v.registrationNumber === targetLog.vehicleReg);
-      const vehRes = await customFetch(`/api/vehicles/${targetLog.vehicleReg}`, {
+      const vehRes = await fetch(`/api/vehicles/${targetLog.vehicleReg}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -496,7 +467,7 @@ export default function App() {
         total: targetLog.cost,
         status: 'APPROVED',
       };
-      const expRes = await customFetch('/api/expenses', {
+      const expRes = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(maintenanceExp),
@@ -515,7 +486,7 @@ export default function App() {
   // 5. Fuel & Expenses
   const handleAddFuelLog = async (newLog: FuelLog) => {
     try {
-      const res = await customFetch('/api/fuel', {
+      const res = await fetch('/api/fuel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLog),
@@ -531,7 +502,7 @@ export default function App() {
 
   const handleAddExpense = async (newExp: Expense) => {
     try {
-      const res = await customFetch('/api/expenses', {
+      const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newExp),
@@ -546,7 +517,7 @@ export default function App() {
 
   const handleUpdateExpenseStatus = async (expId: string, status: 'APPROVED' | 'PENDING' | 'FLAGGED') => {
     try {
-      const res = await customFetch(`/api/expenses/${expId}`, {
+      const res = await fetch(`/api/expenses/${expId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -562,7 +533,7 @@ export default function App() {
 
   const handleSaveConfig = async (newConfig: SystemConfig) => {
     try {
-      const res = await customFetch('/api/config', {
+      const res = await fetch('/api/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newConfig),
@@ -674,6 +645,14 @@ export default function App() {
             onSaveConfig={handleSaveConfig}
           />
         );
+      case 'Map':
+        return (
+          <FleetMap
+            vehicles={vehicles}
+            trips={trips}
+            drivers={drivers}
+          />
+        );
       default:
         return <div className="text-white text-xs font-semibold">Unknown section protocol.</div>;
     }
@@ -699,7 +678,17 @@ export default function App() {
 
           {/* Navigation Links */}
           <nav className="p-4 space-y-1.5">
-            {NAVIGATION_LINKS.map((link) => {
+            {[
+              { id: 'Dashboard', label: 'Overview', icon: LayoutDashboard },
+              { id: 'Fleet', label: 'Vehicle Registry', icon: Truck },
+              { id: 'Drivers', label: 'Driver Directory', icon: Users },
+              { id: 'Trips', label: 'Dispatch Console', icon: Navigation },
+              { id: 'Map', label: 'Live Fleet Map', icon: Map },
+              { id: 'Maintenance', label: 'Service Bay', icon: Wrench },
+              { id: 'Fuel', label: 'Fuel & Expenses', icon: Fuel },
+              { id: 'Analytics', label: 'Reports & Analytics', icon: LineChart },
+              { id: 'Settings', label: 'System Settings', icon: Settings },
+            ].map((link) => {
               const Icon = link.icon;
               const isActive = activeTab === link.id;
               return (
@@ -882,6 +871,7 @@ export default function App() {
             { id: 'Fleet', label: 'Registry', icon: Truck },
             { id: 'Drivers', label: 'Drivers', icon: Users },
             { id: 'Trips', label: 'Dispatch', icon: Navigation },
+            { id: 'Map', label: 'Live Map', icon: Map },
             { id: 'Maintenance', label: 'Service', icon: Wrench },
             { id: 'Fuel', label: 'Financials', icon: Fuel },
           ].map((link) => {

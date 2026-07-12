@@ -1,12 +1,6 @@
-/**
- * @module AnalyticsReports
- * TransitOps Component Module
- */
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Vehicle, Trip, FuelLog, Expense, MaintenanceLog, TripStatus } from '../types';
-import { BarChart3, Download, TrendingUp, DollarSign, Fuel, Check } from 'lucide-react';
-
-const CSV_HEADER = 'Registration Number,Vehicle Name,Completed Trips,Total Miles Run,Estimated Revenue ($),Fuel Costs ($),Maintenance Costs ($),Other Expenses ($),Depreciation ($),Total Costs ($),ROI (%)\r\n';
+import { LineChart, BarChart3, Download, TrendingUp, DollarSign, Fuel, Wrench, Shield, Check } from 'lucide-react';
 
 interface AnalyticsReportsProps {
   vehicles: Vehicle[];
@@ -16,7 +10,6 @@ interface AnalyticsReportsProps {
   maintenanceLogs: MaintenanceLog[];
 }
 
-const calcROI = (r: number, c: number) => c > 0 ? ((r - c) / c) * 100 : 0;
 export default function AnalyticsReports({
   vehicles,
   trips,
@@ -89,7 +82,7 @@ export default function AnalyticsReports({
   const handleExportCSV = () => {
     // CSV Header
     let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += CSV_HEADER;
+    csvContent += 'Registration Number,Vehicle Name,Completed Trips,Total Miles Run,Estimated Revenue ($),Fuel Costs ($),Maintenance Costs ($),Other Expenses ($),Depreciation ($),Total Costs ($),ROI (%)\r\n';
 
     // CSV Rows
     fleetPerformance.forEach((row) => {

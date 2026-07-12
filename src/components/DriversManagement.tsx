@@ -1,10 +1,6 @@
-/**
- * @module DriversManagement
- * TransitOps Component Module
- */
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Driver, DriverStatus, UserRole } from '../types';
-import { Plus, Search, Filter, AlertTriangle, CheckCircle, ShieldAlert, X, ShieldCheck, Mail, Phone, Calendar, Edit2 } from 'lucide-react';
+import { Plus, Search, Filter, AlertTriangle, CheckCircle, ShieldAlert, X, ShieldCheck, Mail, Phone, Calendar } from 'lucide-react';
 
 interface DriversManagementProps {
   drivers: Driver[];
@@ -123,7 +119,6 @@ export default function DriversManagement({
     setEditingId(null);
   };
 
-  /** Filters the drivers */
   const filteredDrivers = drivers.filter((d) => {
     if (selectedStatus && d.status !== selectedStatus) return false;
     if (searchQuery) {
@@ -140,7 +135,7 @@ export default function DriversManagement({
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Header and Add Action */}
-      <div className="flex justify-between items-end w-full">
+      <div className="flex justify-between items-end">
         <div>
           <h2 className="text-2xl font-bold text-white tracking-tight">Driver Registry</h2>
           <p className="text-xs text-[#dbc2b0] max-w-2xl mt-1">
@@ -532,7 +527,7 @@ export default function DriversManagement({
                               className="text-[#ffb77d] hover:text-[#d97707] p-1"
                               title="Edit Driver profile"
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Plus className="h-4 w-4 rotate-45" /> {/* Use Plus rotated for edit or custom */}
                             </button>
                             <button
                               onClick={() => {

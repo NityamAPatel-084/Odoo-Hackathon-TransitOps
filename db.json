@@ -1,0 +1,132 @@
+{
+  "vehicles": [
+    {
+      "registrationNumber": "GJ-123",
+      "name": "Ken",
+      "model": "2026",
+      "type": "Cargo Van",
+      "maxLoadCapacity": 20,
+      "odometer": 15,
+      "acquisitionCost": 789,
+      "status": "Available"
+    },
+    {
+      "registrationNumber": "ABC-123",
+      "name": "abc",
+      "model": "2026",
+      "type": "Tractor (Sleeper)",
+      "maxLoadCapacity": 5000,
+      "odometer": 224,
+      "acquisitionCost": 175,
+      "status": "Available"
+    }
+  ],
+  "drivers": [
+    {
+      "id": "DRV-519",
+      "name": "hehe",
+      "licenseNumber": "CD-123",
+      "licenseCategory": "heavy",
+      "licenseExpiryDate": "2333-02-11",
+      "contactNumber": "123456789",
+      "safetyScore": 90,
+      "status": "Available",
+      "tripCompletionRate": 100
+    }
+  ],
+  "trips": [
+    {
+      "id": "TRP-3891",
+      "source": "2",
+      "destination": "3",
+      "cargoWeight": 78,
+      "plannedDistance": 74,
+      "vehicleReg": "ABC-123",
+      "driverId": "DRV-519",
+      "status": "Completed",
+      "eta": "--"
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "MNT-372",
+      "vehicleReg": "GJ-123",
+      "serviceType": "brake",
+      "date": "4455-03-12",
+      "cost": 123,
+      "status": "Completed"
+    }
+  ],
+  "fuelLogs": [
+    {
+      "id": "FL-606",
+      "vehicleReg": "ABC-123",
+      "dateTime": "2026-07-12 02:50 pm",
+      "liters": 33,
+      "costPerLiter": 1.84,
+      "totalCost": 60.720000000000006
+    },
+    {
+      "id": "FL-891",
+      "vehicleReg": "ABC-123",
+      "dateTime": "2026-07-12 02:49 pm",
+      "liters": 450,
+      "costPerLiter": 1.5,
+      "totalCost": 675
+    }
+  ],
+  "expenses": [
+    {
+      "id": "EXP-994",
+      "tripId": "TRP-4689",
+      "vehicleReg": "GJ-123",
+      "toll": 25,
+      "maintenance": 22,
+      "other": 78,
+      "total": 125,
+      "status": "PENDING"
+    },
+    {
+      "id": "EXP-356",
+      "tripId": "SHOP-REP",
+      "vehicleReg": "GJ-123",
+      "toll": 0,
+      "maintenance": 123,
+      "other": 0,
+      "total": 123,
+      "status": "APPROVED"
+    }
+  ],
+  "users": [
+    {
+      "email": "dispatch@test.com",
+      "role": "dispatcher",
+      "active": true,
+      "password": "123456"
+    },
+    {
+      "email": "manager@test.com",
+      "role": "fleet_manager",
+      "active": true,
+      "password": "123456"
+    },
+    {
+      "email": "safety@test.com",
+      "role": "safety_officer",
+      "active": true,
+      "password": "123456"
+    },
+    {
+      "email": "finance@test.com",
+      "role": "financial_analyst",
+      "active": true,
+      "password": "123456"
+    }
+  ],
+  "config": {
+    "depotName": "Main Hub - Chicago",
+    "defaultCurrency": "USD",
+    "distanceUnit": "miles",
+    "timezone": "America/Chicago (CST)"
+  }
+}

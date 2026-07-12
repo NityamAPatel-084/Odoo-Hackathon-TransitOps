@@ -1,7 +1,3 @@
-/**
- * @module FleetRegistry
- * TransitOps Component Module
- */
 import React, { useState } from 'react';
 import { Vehicle, VehicleStatus, UserRole } from '../types';
 import { Plus, Search, Tag, Filter, AlertTriangle, Trash2, Edit2, X, Check } from 'lucide-react';
@@ -22,14 +18,14 @@ export default function FleetRegistry({
   onDeleteVehicle,
 }: FleetRegistryProps) {
   const isManager = userRole === UserRole.FLEET_MANAGER;
-  const BADGE_STYLES = { default: "px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider" };
-  const BADGE_STYLES = { default: "px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider" };
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingReg, setEditingReg] = useState<string | null>(null);
 
   // Filter states
-  const [filters, setFilters] = useState({ type: '', status: '', search: '' });
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form states for adding
   const [regNum, setRegNum] = useState('');
@@ -118,17 +114,16 @@ export default function FleetRegistry({
     setEditingReg(null);
   };
 
-  /** Filter logic for vehicles */
   // Filtered vehicles
   const filteredVehicles = vehicles.filter((v) => {
-    if (filters.type && !v.type.toLowerCase().includes(filters.type.toLowerCase())) {
+    if (selectedType && !v.type.toLowerCase().includes(selectedType.toLowerCase())) {
       return false;
     }
-    if (filters.status && v.status !== filters.status) {
+    if (selectedStatus && v.status !== selectedStatus) {
       return false;
     }
-    if (filters.search) {
-      const query = filters.search.toLowerCase();
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       return (
         v.registrationNumber.toLowerCase().includes(query) ||
         v.name.toLowerCase().includes(query) ||
@@ -139,7 +134,9 @@ export default function FleetRegistry({
   });
 
   const handleClearFilters = () => {
-    setFilters({ type: '', status: '', search: '' });
+    setSelectedType('');
+    setSelectedStatus('');
+    setSearchQuery('');
   };
 
   return (
@@ -291,8 +288,8 @@ export default function FleetRegistry({
         
         <div className="flex flex-wrap gap-3 w-full sm:w-auto items-center">
           <select
-            value={filters.type}
-            onChange={(e) => setFilters(f => ({ ...f, type: e.target.value }))}
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
             className="bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#ffb77d] cursor-pointer min-w-[120px]"
           >
             <option value="">All Types</option>
@@ -303,8 +300,8 @@ export default function FleetRegistry({
           </select>
 
           <select
-            value={filters.status}
-            onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
             className="bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#ffb77d] cursor-pointer min-w-[120px]"
           >
             <option value="">All Statuses</option>
@@ -320,8 +317,8 @@ export default function FleetRegistry({
               className="w-full bg-[#0D0F14] border border-[#2D3748] rounded pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#ffb77d] placeholder-[#dbc2b0]/50"
               placeholder="Reg. No., VIN or Model..."
               type="text"
-              value={filters.search}
-              onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>

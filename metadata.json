@@ -1,10 +1,6 @@
 {
   "name": "TransitOps",
-  "description": "Smart Transport Operations Platform - Odoo Hackathon",
-  "version": "1.0.0",
-  "database": "SQLite via Prisma ORM v5",
-  "backend": "Express.js on port 3001",
-  "frontend": "React 19 + Vite 6 on port 3000",
-  "author": "Nityam A. Patel",
-  "hackathon": "Odoo Hackathon"
+  "description": "Smart Transport Operations Platform for vehicle registries, driver compliances, dynamic dispatch routes, and ROI analytics reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

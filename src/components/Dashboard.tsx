@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Vehicle, Driver, Trip, VehicleStatus, DriverStatus, TripStatus } from '../types';
 import { Truck, CheckCircle, Wrench, Navigation, Clock, Users, PieChart, ChevronRight } from 'lucide-react';
 
@@ -8,28 +8,6 @@ interface DashboardProps {
   trips: Trip[];
   onNavigateToTab: (tab: string) => void;
 }
-
-const VEHICLE_TYPE_OPTIONS = [
-  { value: 'All', label: 'All Vehicles' },
-  { value: 'Heavy Duty', label: 'Heavy Duty' },
-  { value: 'Vans', label: 'Vans' },
-  { value: 'Electric', label: 'Electric/EV' },
-];
-
-const STATUS_OPTIONS = [
-  { value: 'All', label: 'All Statuses' },
-  { value: 'Active', label: 'On Trip' },
-  { value: 'Available', label: 'Available' },
-  { value: 'Maintenance', label: 'In Shop' },
-];
-
-const REGION_OPTIONS = [
-  { value: 'All', label: 'All Regions' },
-  { value: 'North', label: 'North Hub' },
-  { value: 'South', label: 'South Depot' },
-  { value: 'East', label: 'East Gate' },
-  { value: 'West', label: 'West Dock' },
-];
 
 export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }: DashboardProps) {
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('All');
@@ -56,11 +34,7 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
   const pendingTrips = trips.filter(t => t.status === TripStatus.DRAFT).length;
   const driversOnDuty = drivers.filter(d => d.status === DriverStatus.ON_TRIP || d.status === DriverStatus.AVAILABLE).length;
 
-  // Utilization calculation
-  /**
-   * Calculates the percentage of active (On Trip) vehicles out of the total deployable fleet.
-   * Retired vehicles are completely excluded from the denominator.
-   */
+  // Utilization calculation (Active / Total Non-Retired)
   const nonRetiredTotal = totalVehicles - retiredVehicles;
   const utilization = nonRetiredTotal > 0 ? Math.round((activeVehicles / nonRetiredTotal) * 100) : 0;
 
@@ -79,9 +53,10 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
               onChange={(e) => setVehicleTypeFilter(e.target.value)}
               className="appearance-none bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-xs text-white pr-8 focus:outline-none focus:border-[#d97707] cursor-pointer"
             >
-              {VEHICLE_TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+              <option value="All">All Vehicles</option>
+              <option value="Heavy Duty">Heavy Duty</option>
+              <option value="Vans">Vans</option>
+              <option value="Electric">Electric/EV</option>
             </select>
             <ChevronRight className="h-3.5 w-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-[#dbc2b0] pointer-events-none" />
           </div>
@@ -91,9 +66,10 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
               onChange={(e) => setStatusFilter(e.target.value)}
               className="appearance-none bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-xs text-white pr-8 focus:outline-none focus:border-[#d97707] cursor-pointer"
             >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+              <option value="All">All Statuses</option>
+              <option value="Active">On Trip</option>
+              <option value="Available">Available</option>
+              <option value="Maintenance">In Shop</option>
             </select>
             <ChevronRight className="h-3.5 w-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-[#dbc2b0] pointer-events-none" />
           </div>
@@ -103,9 +79,11 @@ export default function Dashboard({ vehicles, drivers, trips, onNavigateToTab }:
               onChange={(e) => setRegionFilter(e.target.value)}
               className="appearance-none bg-[#0D0F14] border border-[#2D3748] rounded px-3 py-1.5 text-xs text-white pr-8 focus:outline-none focus:border-[#d97707] cursor-pointer"
             >
-              {REGION_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+              <option value="All">All Regions</option>
+              <option value="North">North Hub</option>
+              <option value="South">South Depot</option>
+              <option value="East">East Gate</option>
+              <option value="West">West Dock</option>
             </select>
             <ChevronRight className="h-3.5 w-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 text-[#dbc2b0] pointer-events-none" />
           </div>

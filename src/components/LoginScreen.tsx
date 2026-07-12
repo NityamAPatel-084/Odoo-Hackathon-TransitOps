@@ -1,17 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { UserRole } from '../types';
 import { Truck, Shield, LayoutDashboard, LineChart, ArrowRight, AlertCircle, Headphones, ChevronDown, Lock } from 'lucide-react';
 
 interface LoginScreenProps {
   onLogin: (email: string, role: UserRole) => void;
 }
-
-const AVAILABLE_MODULES = [
-  { name: 'Fleet Manager', icon: LayoutDashboard },
-  { name: 'Dispatcher', icon: Headphones },
-  { name: 'Safety Officer', icon: Shield },
-  { name: 'Financial Analyst', icon: LineChart },
-];
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [email, setEmail] = useState('dispatcher@transitops.com');
@@ -60,17 +53,30 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="relative z-10 space-y-5">
           <p className="text-xs font-bold text-white tracking-wider uppercase">Available Modules:</p>
           <ul className="space-y-4">
-            {AVAILABLE_MODULES.map((module) => {
-              const Icon = module.icon;
-              return (
-                <li key={module.name} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
-                    <Icon className="h-4 w-4 text-[#d97707]" />
-                  </div>
-                  <span className="text-sm font-semibold text-[#dbc2b0]/90">{module.name}</span>
-                </li>
-              );
-            })}
+            <li className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
+                <LayoutDashboard className="h-4 w-4 text-[#d97707]" />
+              </div>
+              <span className="text-sm font-semibold text-[#dbc2b0]/90">Fleet Manager</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
+                <Headphones className="h-4 w-4 text-[#d97707]" />
+              </div>
+              <span className="text-sm font-semibold text-[#dbc2b0]/90">Dispatcher</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
+                <Shield className="h-4 w-4 text-[#d97707]" />
+              </div>
+              <span className="text-sm font-semibold text-[#dbc2b0]/90">Safety Officer</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
+                <LineChart className="h-4 w-4 text-[#d97707]" />
+              </div>
+              <span className="text-sm font-semibold text-[#dbc2b0]/90">Financial Analyst</span>
+            </li>
           </ul>
         </div>
         
