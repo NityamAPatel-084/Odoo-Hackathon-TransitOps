@@ -1,3 +1,7 @@
+/**
+ * @module pdfExporter
+ * Documentation for pdfExporter.ts
+ */
 import { jsPDF } from 'jspdf';
 import { Vehicle, Driver, Trip, MaintenanceLog, FuelLog, Expense, SystemConfig } from '../types';
 
