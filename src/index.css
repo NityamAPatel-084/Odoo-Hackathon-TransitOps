@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------------------------- */
+/* CUSTOM WARM CHOCOLATE BROWN & AMBER THEME OVERRIDES                        */
+/* These rules target the compiled Tailwind utility classes for high precision.*/
+/* -------------------------------------------------------------------------- */
+
+@layer base {
+  /* Set global selection styling to match the gorgeous warm amber theme */
+  ::selection {
+    background-color: rgba(217, 119, 7, 0.3) !important;
+    color: #ffb77d !important;
+  }
+
+  /* Core outer body and background colors */
+  body {
+    background-color: #150e0a !important;
+    color: #dbc2b0 !important;
+  }
+
+  /* Target all primary dark backgrounds */
+  .bg-\[\#0D0F14\] {
+    background-color: #150e0a !important;
+  }
+  .bg-\[\#0d0f14\] {
+    background-color: #150e0a !important;
+  }
+
+  /* Target panel cards, sidebars, headers, and container blocks */
+  .bg-\[\#161A22\] {
+    background-color: #221610 !important;
+  }
+  .bg-\[\#161a22\] {
+    background-color: #221610 !important;
+  }
+
+  /* Target secondary containers and interactive buttons */
+  .bg-\[\#1E293B\] {
+    background-color: #301f16 !important;
+  }
+  .bg-\[\#1e293b\] {
+    background-color: #301f16 !important;
+  }
+
+  /* Background Opacity variants */
+  .bg-\[\#0D0F14\]\/50 {
+    background-color: rgba(21, 14, 10, 0.5) !important;
+  }
+  .bg-\[\#0d0f14\]\/50 {
+    background-color: rgba(21, 14, 10, 0.5) !important;
+  }
+  .bg-\[\#0D0F14\]\/40 {
+    background-color: rgba(21, 14, 10, 0.4) !important;
+  }
+  .bg-\[\#0d0f14\]\/40 {
+    background-color: rgba(21, 14, 10, 0.4) !important;
+  }
+
+  /* Interactive button opacity variants */
+  .bg-\[\#1E293B\]\/20 {
+    background-color: rgba(48, 31, 22, 0.2) !important;
+  }
+  .bg-\[\#1e293b\]\/20 {
+    background-color: rgba(48, 31, 22, 0.2) !important;
+  }
+  .bg-\[\#1E293B\]\/30 {
+    background-color: rgba(48, 31, 22, 0.3) !important;
+  }
+  .bg-\[\#1e293b\]\/30 {
+    background-color: rgba(48, 31, 22, 0.3) !important;
+  }
+  .bg-\[\#1E293B\]\/60 {
+    background-color: rgba(48, 31, 22, 0.6) !important;
+  }
+  .bg-\[\#1e293b\]\/60 {
+    background-color: rgba(48, 31, 22, 0.6) !important;
+  }
+
+  /* Hover state overrides */
+  .hover\:bg-\[\#1E293B\]:hover {
+    background-color: #402b1f !important;
+  }
+  .hover\:bg-\[\#1e293b\]:hover {
+    background-color: #402b1f !important;
+  }
+  .hover\:bg-\[\#1E293B\]\/60:hover {
+    background-color: rgba(64, 43, 31, 0.6) !important;
+  }
+  .hover\:bg-\[\#1e293b\]\/60:hover {
+    background-color: rgba(64, 43, 31, 0.6) !important;
+  }
+
+  /* Border color overrides (slate-gray to warm chocolate brown border) */
+  .border-\[\#2D3748\] {
+    border-color: #38251a !important;
+  }
+  .border-\[\#2d3748\] {
+    border-color: #38251a !important;
+  }
+  .border-\[\#2D3748\]\/30 {
+    border-color: rgba(56, 37, 26, 0.3) !important;
+  }
+  .border-\[\#2d3748\]\/30 {
+    border-color: rgba(56, 37, 26, 0.3) !important;
+  }
+  .border-\[\#2D3748\]\/50 {
+    border-color: rgba(56, 37, 26, 0.5) !important;
+  }
+  .border-\[\#2d3748\]\/50 {
+    border-color: rgba(56, 37, 26, 0.5) !important;
+  }
+  .border-\[\#2D3748\]\/65 {
+    border-color: rgba(56, 37, 26, 0.65) !important;
+  }
+  .border-\[\#2d3748\]\/65 {
+    border-color: rgba(56, 37, 26, 0.65) !important;
+  }
+
+  /* Table cell dividers */
+  .divide-\[\#2D3748\]\/50 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(56, 37, 26, 0.5) !important;
+  }
+  .divide-\[\#2d3748\]\/50 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(56, 37, 26, 0.5) !important;
+  }
+  .divide-\[\#2D3748\]\/65 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(56, 37, 26, 0.65) !important;
+  }
+  .divide-\[\#2d3748\]\/65 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(56, 37, 26, 0.65) !important;
+  }
+
+  /* Input and selection elements style adjustments */
+  input, select, textarea {
+    background-color: #0e0906 !important;
+    border-color: #38251a !important;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #ffb77d !important;
+    box-shadow: 0 0 0 1px #ffb77d !important;
+  }
+
+  /* Dark mode scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #150e0a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #38251a;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4c3324;
+  }
+}
