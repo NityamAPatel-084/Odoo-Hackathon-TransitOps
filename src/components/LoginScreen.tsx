@@ -6,6 +6,13 @@ interface LoginScreenProps {
   onLogin: (email: string, role: UserRole) => void;
 }
 
+const AVAILABLE_MODULES = [
+  { id: 'fleet', name: 'Fleet Manager', Icon: LayoutDashboard },
+  { id: 'dispatch', name: 'Dispatcher', Icon: Headphones },
+  { id: 'safety', name: 'Safety Officer', Icon: Shield },
+  { id: 'finance', name: 'Financial Analyst', Icon: LineChart },
+];
+
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [email, setEmail] = useState('dispatcher@transitops.com');
   const [password, setPassword] = useState('••••••••');
@@ -53,30 +60,14 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="relative z-10 space-y-5">
           <p className="text-xs font-bold text-white tracking-wider uppercase">Available Modules:</p>
           <ul className="space-y-4">
-            <li className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
-                <LayoutDashboard className="h-4 w-4 text-[#d97707]" />
-              </div>
-              <span className="text-sm font-semibold text-[#dbc2b0]/90">Fleet Manager</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
-                <Headphones className="h-4 w-4 text-[#d97707]" />
-              </div>
-              <span className="text-sm font-semibold text-[#dbc2b0]/90">Dispatcher</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
-                <Shield className="h-4 w-4 text-[#d97707]" />
-              </div>
-              <span className="text-sm font-semibold text-[#dbc2b0]/90">Safety Officer</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
-                <LineChart className="h-4 w-4 text-[#d97707]" />
-              </div>
-              <span className="text-sm font-semibold text-[#dbc2b0]/90">Financial Analyst</span>
-            </li>
+            {AVAILABLE_MODULES.map(({ id, name, Icon }) => (
+              <li key={id} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#140f0c] border border-[#2c1f18] flex items-center justify-center shadow-sm">
+                  <Icon className="h-4 w-4 text-[#d97707]" />
+                </div>
+                <span className="text-sm font-semibold text-[#dbc2b0]/90">{name}</span>
+              </li>
+            ))}
           </ul>
         </div>
         
